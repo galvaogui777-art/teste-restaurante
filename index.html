@@ -67,6 +67,22 @@
   }
   .campo:focus { border-color: #f97316; box-shadow: 0 0 0 4px rgba(249,115,22,.15); }
   .rotulo { font-size: .75rem; font-weight: 700; color: #57534e; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .35rem; display: block; }
+
+  /* 🆕 Abas do painel admin */
+  .adminTabBtn {
+    padding: .7rem 1rem;
+    font-size: .82rem;
+    font-weight: 800;
+    color: #78716c;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: .15s;
+    display: inline-flex; align-items: center; gap: .4rem;
+    white-space: nowrap;
+  }
+  .adminTabBtn:hover { color: #1c1917; }
+  .adminTabBtn.ativo { color: #ea580c; border-bottom-color: #ea580c; }
 </style>
 </head>
 
@@ -99,7 +115,6 @@
         👨‍🍳 <span id="btnAdminTexto">Cozinha</span>
       </button>
 
-      <!-- 🆕 NOVO: Botão de Histórico de Pedidos (visível também no mobile, ícone colapsa o texto) -->
       <button id="btnMeusPedidos"
         class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 transition">
         📦 <span class="hidden sm:inline">Meus Pedidos</span>
@@ -137,7 +152,7 @@
             class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/95 text-ink placeholder:text-stone-400 text-sm outline-none focus:ring-4 focus:ring-white/30 shadow-soft" />
         </div>
 
-        <!-- 🆕 NOVO: Botão secundário do Histórico (somente mobile) -->
+        <!-- Botão secundário do Histórico (somente mobile) -->
         <button id="btnMeusPedidosHero"
           class="sm:hidden mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/30 backdrop-blur text-white text-sm font-bold transition active:scale-95">
           📦 Consultar Meus Pedidos por Celular
@@ -289,7 +304,7 @@
 
 
   <!-- ============================================================
-       VIEW 3 · PAGAMENTO PIX (QR CODE + COPIA E COLA)
+       VIEW 3 · PAGAMENTO PIX
        ============================================================ -->
   <section id="view-pix" class="oculto">
     <div class="max-w-lg mx-auto px-4 py-8">
@@ -303,14 +318,12 @@
 
         <div id="pixValor" class="mt-4 text-3xl font-black text-brand-600"></div>
 
-        <!-- QR Code -->
         <div class="mt-5 rounded-2xl border-2 border-dashed border-stone-200 p-4 grid place-items-center bg-stone-50 min-h-[240px]">
           <div id="pixQrContainer" class="grid place-items-center">
             <div class="animate-pulse text-stone-400 text-sm">Gerando QR Code...</div>
           </div>
         </div>
 
-        <!-- Copia e cola -->
         <div class="mt-5 text-left">
           <label class="rotulo">Código Copia e Cola</label>
           <div class="flex gap-2">
@@ -322,7 +335,6 @@
           </div>
         </div>
 
-        <!-- Status -->
         <div id="pixStatus" class="mt-5 rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-800 flex items-center justify-center gap-2">
           <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           Aguardando confirmação do pagamento...
@@ -384,7 +396,7 @@
 
 
   <!-- ============================================================
-       VIEW 5 · 🆕 HISTÓRICO DE PEDIDOS POR TELEFONE
+       VIEW 5 · HISTÓRICO DE PEDIDOS POR TELEFONE
        ============================================================ -->
   <section id="view-historico" class="oculto">
     <div class="max-w-3xl mx-auto px-4 py-6">
@@ -398,7 +410,6 @@
         Digite o WhatsApp que você usou ao fazer o pedido para consultar seu histórico.
       </p>
 
-      <!-- Bloco de busca -->
       <div class="bg-white rounded-2xl shadow-card p-5 mb-5">
         <label class="rotulo" for="historicoTelefone">Número do WhatsApp</label>
         <div class="flex flex-col sm:flex-row gap-2">
@@ -413,7 +424,6 @@
         </p>
       </div>
 
-      <!-- Resultado -->
       <div id="historicoResultado">
         <div class="rounded-2xl border-2 border-dashed border-stone-200 bg-white/60 p-10 text-center text-stone-400">
           <div class="text-5xl mb-3">🔎</div>
@@ -458,7 +468,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
           <div>
             <h2 class="text-2xl font-black">Painel da Cozinha</h2>
-            <p class="text-sm text-stone-500">Acompanhe e avance o status dos pedidos em tempo real.</p>
+            <p class="text-sm text-stone-500">Acompanhe pedidos e gerencie o cardápio em tempo real.</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -484,8 +494,81 @@
         <!-- Métricas rápidas -->
         <div id="adminMetricas" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"></div>
 
-        <!-- Kanban -->
-        <div id="kanban" class="kanban grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+        <!-- 🆕 Abas do painel -->
+        <div class="flex gap-1 border-b border-stone-200 mb-5 overflow-x-auto no-scrollbar">
+          <button data-admin-tab="pedidos"  id="tabBtnPedidos"  class="adminTabBtn ativo">📋 Pedidos</button>
+          <button data-admin-tab="cardapio" id="tabBtnCardapio" class="adminTabBtn">🍽️ Gerenciar Cardápio</button>
+        </div>
+
+        <!-- ---------- ABA: PEDIDOS (KANBAN) ---------- -->
+        <div id="adminTabPedidos">
+          <div id="kanban" class="kanban grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- ---------- 🆕 ABA: GERENCIAR CARDÁPIO ---------- -->
+        <div id="adminTabCardapio" class="oculto">
+
+          <!-- Cabeçalho da aba + ação de reset -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 class="text-lg font-black">🍽️ Gerenciar Cardápio</h3>
+              <p class="text-xs text-stone-500">Adicione, edite e remova categorias e produtos. As alterações aparecem imediatamente no cardápio do cliente.</p>
+            </div>
+            <button id="btnResetarCardapio"
+              class="text-xs font-bold px-3 py-2 rounded-xl bg-white hover:bg-amber-50 border border-stone-200 hover:border-amber-300 hover:text-amber-700 text-stone-600 transition">
+              🔄 Restaurar padrão
+            </button>
+          </div>
+
+          <!-- Categorias / Seções -->
+          <div class="bg-white rounded-2xl shadow-card p-5 mb-5">
+            <h4 class="font-extrabold text-sm uppercase tracking-wide text-stone-500 mb-4 flex items-center gap-2">
+              📂 Categorias / Seções
+            </h4>
+
+            <form id="formCategoria" class="grid grid-cols-1 sm:grid-cols-[120px_1fr_80px_auto] gap-3 mb-4">
+              <div>
+                <label class="rotulo" for="catId">ID</label>
+                <input id="catId" class="campo font-mono text-xs" placeholder="ex: bebidas" maxlength="30" required />
+              </div>
+              <div>
+                <label class="rotulo" for="catNome">Nome</label>
+                <input id="catNome" class="campo" placeholder="ex: Bebidas" maxlength="40" required />
+              </div>
+              <div>
+                <label class="rotulo" for="catIcone">Ícone</label>
+                <input id="catIcone" class="campo text-center text-xl" placeholder="🥤" maxlength="4" />
+              </div>
+              <div class="flex items-end">
+                <button type="submit"
+                  class="w-full sm:w-auto px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-sm shadow-lg shadow-brand-600/25 transition active:scale-[.98]">
+                  + Adicionar
+                </button>
+              </div>
+            </form>
+
+            <div id="listaCategoriasAdmin" class="space-y-2"></div>
+          </div>
+
+          <!-- Produtos -->
+          <div class="bg-white rounded-2xl shadow-card p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h4 class="font-extrabold text-sm uppercase tracking-wide text-stone-500 flex items-center gap-2">
+                  🍔 Produtos do Cardápio
+                </h4>
+                <p class="text-[11px] text-stone-400 mt-1" id="contadorProdutosAdmin"></p>
+              </div>
+              <button id="btnNovoProduto"
+                class="text-xs font-bold px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-600/25 transition active:scale-[.98]">
+                ➕ Novo Produto
+              </button>
+            </div>
+
+            <div id="listaProdutosAdmin" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -522,16 +605,13 @@
          inset-x-0 bottom-0 max-h-[88vh] rounded-t-3xl
          sm:inset-y-0 sm:right-0 sm:left-auto sm:w-[420px] sm:max-h-none sm:rounded-none sm:rounded-l-3xl">
 
-  <!-- Cabeçalho -->
   <div class="flex items-center justify-between px-5 py-4 border-b border-stone-200 shrink-0">
     <h3 class="font-black text-lg">Seu carrinho</h3>
     <button id="btnFecharCarrinho" class="w-9 h-9 grid place-items-center rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 transition">✕</button>
   </div>
 
-  <!-- Itens -->
   <div id="itensCarrinho" class="flex-1 overflow-y-auto px-5 py-4"></div>
 
-  <!-- Rodapé -->
   <div id="rodapeCarrinho" class="shrink-0 border-t border-stone-200 px-5 py-4 bg-stone-50 rounded-b-3xl sm:rounded-bl-none sm:rounded-tl-3xl">
     <div class="space-y-1.5 text-sm mb-4">
       <div class="flex justify-between text-stone-500"><span>Subtotal</span><span id="carrinhoSubtotal" class="font-semibold text-stone-700">R$ 0,00</span></div>
@@ -550,7 +630,7 @@
 
 
 <!-- ============================================================
-     MODAL DE DETALHES DO PRODUTO
+     MODAL DE DETALHES DO PRODUTO (cliente)
      ============================================================ -->
 <div id="overlayProduto" class="oculto fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm anim-fade"></div>
 
@@ -559,6 +639,19 @@
          inset-x-0 bottom-0 max-h-[92vh] rounded-t-3xl
          sm:inset-0 sm:m-auto sm:max-w-lg sm:h-fit sm:rounded-3xl sm:shadow-2xl">
   <div id="conteudoModalProduto" class="overflow-y-auto"></div>
+</div>
+
+
+<!-- ============================================================
+     🆕 MODAL DE FORMULÁRIO DE PRODUTO (admin)
+     ============================================================ -->
+<div id="overlayAdminProduto" class="oculto fixed inset-0 z-[65] bg-black/50 backdrop-blur-sm anim-fade"></div>
+
+<div id="modalAdminProduto"
+  class="oculto fixed z-[65] bg-white flex flex-col
+         inset-x-0 bottom-0 max-h-[94vh] rounded-t-3xl
+         sm:inset-0 sm:m-auto sm:max-w-xl sm:h-fit sm:max-h-[92vh] sm:rounded-3xl sm:shadow-2xl">
+  <div id="conteudoFormProduto" class="overflow-y-auto"></div>
 </div>
 
 
@@ -576,7 +669,7 @@
  *  ---------------------------------------------------------------------------
  *  Arquitetura (JS Vanilla ES6+):
  *    1) CONFIG          → constantes do restaurante, entrega e Mercado Pago
- *    2) DADOS           → catálogo de produtos e categorias
+ *    2) DADOS           → catálogo inicial (fallback) + carga dinâmica
  *    3) ESTADO          → store central + persistência em localStorage
  *    4) UTILITÁRIOS     → helpers (formatação, toast, máscaras, QR/EMV)
  *    5) CLIENTE         → render do cardápio, modal de produto, carrinho
@@ -584,8 +677,9 @@
  *    7) PAGAMENTO       → PIX Mercado Pago (API) + fallback simulado
  *    8) CONFIRMAÇÃO     → resumo + deep link do WhatsApp
  *    9) ADMIN/COZINHA   → login, kanban e avanço de status
- *   10) HISTÓRICO       → 🆕 busca de pedidos por telefone (WhatsApp)
- *   11) BOOTSTRAP       → inicialização e sincronização entre abas
+ *   10) HISTÓRICO       → busca de pedidos por telefone (WhatsApp)
+ *   11) GER. CARDÁPIO   → 🆕 CRUD de produtos e categorias (admin)
+ *   12) BOOTSTRAP       → inicialização e sincronização entre abas
  * ========================================================================== */
 
 
@@ -596,20 +690,15 @@ const CONFIG = {
   restaurante: {
     nome: 'Sabor da Tia',
     slogan: 'Comida caseira feita com amor',
-    /* ⚠️ WhatsApp no formato internacional: DDI + DDD + número (só dígitos) */
     whatsapp: '5511999999999',
-    /* Chave PIX usada no fallback (modo simulação) */
     pixChave: 'sabordatia@exemplo.com.br',
     nomeTitularPix: 'MARIA DA SILVA',
     cidadePix: 'SAO PAULO',
-    /* Status da loja — também controlado pelo painel da cozinha */
     aberto: true
   },
 
   entrega: {
-    /* Taxa padrão quando o bairro não estiver na lista */
     taxaPadrao: 8.00,
-    /* Taxa fixa por bairro (edite os bairros conforme sua região) */
     bairros: {
       'Centro':            5.00,
       'Jardim América':    7.00,
@@ -622,54 +711,17 @@ const CONFIG = {
   },
 
   /* ------------------------------------------------------------------------
-   * MERCADO PAGO  (conta PJ)
-   * ------------------------------------------------------------------------
-   * FLUXO DO PIX:
-   *   1. O front monta o payload e chama POST /v1/payments com o Bearer Token
-   *      da conta PJ.
-   *   2. O MP responde com `point_of_interaction.transaction_data`, que contém:
-   *        • qr_code       → string "Copia e Cola" (EMV)
-   *        • qr_code_base64→ imagem PNG do QR em base64
-   *   3. Exibimos o QR e fazemos polling em GET /v1/payments/{id} até
-   *      status === 'approved'.
-   *
-   * ⚠️ IMPORTANTE SOBRE CORS:
-   *   A API do Mercado Pago NÃO libera CORS para chamadas diretas do navegador.
-   *   Em produção, use SEMPRE um backend/proxy (serverless, Node, PHP, etc.)
-   *   que guarda o ACCESS TOKEN em segredo e repassa a requisição.
-   *
-   *   Exemplo mínimo de backend (Node + Express):
-   *   -------------------------------------------------------------------
-   *   app.post('/api/pix', async (req, res) => {
-   *     const r = await fetch('https://api.mercadopago.com/v1/payments', {
-   *       method: 'POST',
-   *       headers: {
-   *         'Content-Type': 'application/json',
-   *         'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-   *         'X-Idempotency-Key': req.body.idempotencyKey
-   *       },
-   *       body: JSON.stringify(req.body.payment)
-   *     });
-   *     res.status(r.status).json(await r.json());
-   *   });
-   *   -------------------------------------------------------------------
+   * MERCADO PAGO  (conta PJ)  — mesma configuração anterior
    * ---------------------------------------------------------------------- */
   mercadoPago: {
-    /* ⚠️ COLE AQUI O ACCESS TOKEN DE PRODUÇÃO DA CONTA PJ (apenas em dev local) */
     accessToken: 'SEU_ACCESS_TOKEN_MERCADO_PAGO_PJ',
-    /* ✅ RECOMENDADO: URL do seu backend/proxy. Se preenchido, tem prioridade. */
-    backendProxy: '',            // ex: 'https://seu-backend.com/api/pix'
-    /* URL pública para o MP avisar sobre mudanças de status (webhook) */
-    webhookUrl: '',              // ex: 'https://seu-backend.com/api/webhook'
-    /* true  → não chama a API real, gera um PIX simulado localmente
-       false → tenta chamar o Mercado Pago (via proxy ou direto)             */
+    backendProxy: '',
+    webhookUrl: '',
     simulacao: true,
-    /* Intervalo de checagem do status do pagamento (ms) */
     intervaloPolling: 5000
   },
 
   admin: {
-    /* Senha de acesso ao painel da cozinha (troque antes de publicar!) */
     senha: '1234'
   }
 };
@@ -677,18 +729,24 @@ const CONFIG = {
 
 /* ============================================================================
  * 2) DADOS  —  CATEGORIAS E PRODUTOS
+ * ----------------------------------------------------------------------------
+ *  Os dados iniciais servem de fallback quando o navegador ainda não possui
+ *  cardápio salvo. A partir da primeira edição no painel, tudo passa a ser
+ *  lido/gravado em localStorage (ver seção 3).
+ *
+ *  ⚠️ A categoria "todos" é considerada PSEUDO-CATEGORIA: ela é sempre
+ *     adicionada dinamicamente na tela do cliente, e NÃO é armazenada.
  * ========================================================================== */
-const CATEGORIAS = [
-  { id: 'todos',      nome: 'Todos',        icone: '🍽️' },
-  { id: 'pratos',     nome: 'Pratos Feitos',icone: '🍛' },
-  { id: 'porcoes',    nome: 'Porções',      icone: '🍟' },
-  { id: 'bebidas',    nome: 'Bebidas',      icone: '🥤' },
-  { id: 'sobremesas', nome: 'Sobremesas',   icone: '🍮' }
+const CATEGORIAS_INICIAIS = [
+  { id: 'pratos',     nome: 'Pratos Feitos', icone: '🍛' },
+  { id: 'porcoes',    nome: 'Porções',       icone: '🍟' },
+  { id: 'bebidas',    nome: 'Bebidas',       icone: '🥤' },
+  { id: 'sobremesas', nome: 'Sobremesas',    icone: '🍮' }
 ];
 
 const IMG = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&q=70`;
 
-const PRODUTOS = [
+const PRODUTOS_INICIAIS = [
   /* ---- Pratos Feitos ---- */
   { id:'p01', categoria:'pratos', nome:'Feijoada da Tia', preco:34.90, destaque:true,
     desc:'Feijoada completa com arroz, couve, farofa e laranja.',
@@ -754,31 +812,42 @@ const PRODUTOS = [
     img: IMG('photo-1590301157890-4810ed352733') }
 ];
 
+/* ---------- Arrays dinâmicos (populados por carregarCardapio()) ---------- */
+let CATEGORIAS = [];   // [{ id, nome, icone }] — SEM a pseudo-categoria "todos"
+let PRODUTOS   = [];   // [{ id, categoria, nome, preco, desc, img, destaque }]
+
+/** Pseudo-categoria "Todos" sempre presente no filtro do cliente. */
+const CATEGORIA_TODOS = { id: 'todos', nome: 'Todos', icone: '🍽️' };
+
 
 /* ============================================================================
  * 3) ESTADO GLOBAL + PERSISTÊNCIA (localStorage)
  * ========================================================================== */
 const CHAVES = {
-  carrinho: 'sabordatia:carrinho:v1',
-  pedidos:  'sabordatia:pedidos:v1',
-  seq:      'sabordatia:sequencia:v1',
-  sessao:   'sabordatia:admin:sessao'
+  carrinho:   'sabordatia:carrinho:v1',
+  pedidos:    'sabordatia:pedidos:v1',
+  seq:        'sabordatia:sequencia:v1',
+  sessao:     'sabordatia:admin:sessao',
+  categorias: 'sabordatia:categorias:v1',   // 🆕
+  produtos:   'sabordatia:produtos:v1'      // 🆕
 };
 
 const estado = {
-  carrinho: [],          // [{ linhaId, produtoId, nome, preco, qtd, obs, img }]
-  pedidos: [],           // [{ id, numero, cliente, itens, valores, pagamento, status, criadoEm }]
-  sequencia: 1,          // próximo número de pedido
+  carrinho: [],
+  pedidos: [],
+  sequencia: 1,
   categoriaAtiva: 'todos',
   busca: '',
-  produtoModal: null,    // { produtoId, qtd, obs }
-  pedidoAtual: null,     // pedido em processo de checkout
-  pix: null,             // { paymentId, copiaECola, qrBase64, pollTimer }
+  produtoModal: null,
+  pedidoAtual: null,
+  pix: null,
   adminLogado: false,
-  historicoTelefone: ''  // 🆕 último telefone buscado no histórico
+  historicoTelefone: '',
+  adminTab: 'pedidos',        // 🆕 'pedidos' | 'cardapio'
+  produtoEditandoId: null     // 🆕 null = novo produto; string = edição em andamento
 };
 
-/** Carrega os dados persistidos do navegador. */
+/** Carrega pedidos, carrinho e status da loja. */
 function carregarEstado() {
   try {
     estado.carrinho  = JSON.parse(localStorage.getItem(CHAVES.carrinho) || '[]');
@@ -791,14 +860,52 @@ function carregarEstado() {
   }
 }
 
-/** Persiste o carrinho. */
-function salvarCarrinho() {
-  localStorage.setItem(CHAVES.carrinho, JSON.stringify(estado.carrinho));
+/** 🆕 Carrega categorias e produtos do localStorage (com fallback). */
+function carregarCardapio() {
+  try {
+    const catRaw = localStorage.getItem(CHAVES.categorias);
+    const proRaw = localStorage.getItem(CHAVES.produtos);
+
+    CATEGORIAS = catRaw ? JSON.parse(catRaw) : JSON.parse(JSON.stringify(CATEGORIAS_INICIAIS));
+    PRODUTOS   = proRaw ? JSON.parse(proRaw) : JSON.parse(JSON.stringify(PRODUTOS_INICIAIS));
+
+    /* Sanidade: sempre garantir arrays válidos */
+    if (!Array.isArray(CATEGORIAS)) CATEGORIAS = JSON.parse(JSON.stringify(CATEGORIAS_INICIAIS));
+    if (!Array.isArray(PRODUTOS))   PRODUTOS   = JSON.parse(JSON.stringify(PRODUTOS_INICIAIS));
+
+    /* Garantir que a pseudo-categoria 'todos' NUNCA exista dentro do array */
+    CATEGORIAS = CATEGORIAS.filter((c) => c && c.id !== 'todos');
+  } catch (e) {
+    console.warn('[Sabor da Tia] Falha ao carregar cardápio, usando padrão:', e);
+    CATEGORIAS = JSON.parse(JSON.stringify(CATEGORIAS_INICIAIS));
+    PRODUTOS   = JSON.parse(JSON.stringify(PRODUTOS_INICIAIS));
+  }
 }
-/** Persiste os pedidos e o contador de sequência. */
-function salvarPedidos() {
+
+function salvarCarrinho()   { localStorage.setItem(CHAVES.carrinho, JSON.stringify(estado.carrinho)); }
+function salvarPedidos()    {
   localStorage.setItem(CHAVES.pedidos, JSON.stringify(estado.pedidos));
   localStorage.setItem(CHAVES.seq, String(estado.sequencia));
+}
+function salvarCategorias() { localStorage.setItem(CHAVES.categorias, JSON.stringify(CATEGORIAS)); }
+function salvarProdutos()   { localStorage.setItem(CHAVES.produtos, JSON.stringify(PRODUTOS)); }
+
+/** 🆕 Restaura o cardápio padrão (com confirmação e limpeza do localStorage). */
+function restaurarCardapioPadrao() {
+  if (!confirm('Isso irá APAGAR todo o cardápio atual e restaurar os dados originais. Continuar?')) return;
+
+  CATEGORIAS = JSON.parse(JSON.stringify(CATEGORIAS_INICIAIS));
+  PRODUTOS   = JSON.parse(JSON.stringify(PRODUTOS_INICIAIS));
+
+  salvarCategorias();
+  salvarProdutos();
+  limparCarrinhoDeProdutosRemovidos();
+
+  estado.categoriaAtiva = 'todos';
+  renderCategorias();
+  renderProdutos();
+  renderAdminCardapio();
+  toast('🔄 Cardápio restaurado ao padrão');
 }
 
 
@@ -808,28 +915,25 @@ function salvarPedidos() {
 const $  = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
-/** Formata número como moeda brasileira. */
 const money = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-/** Gera um ID único. */
 const uid = () => (window.crypto?.randomUUID
   ? crypto.randomUUID()
   : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2));
 
-/** Escapa HTML para evitar injeção em campos digitados pelo usuário. */
+/** 🆕 Gera um ID curto para produto (prefixo "pg_"). */
+const novoIdProduto = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,
   (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 
-/** Formata data/hora curta. */
 const hora = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-/** 🆕 Formata data + hora completas (para o histórico). */
 const dataHoraCompleta = (iso) => new Date(iso).toLocaleString('pt-BR', {
   day: '2-digit', month: '2-digit', year: 'numeric',
   hour: '2-digit', minute: '2-digit'
 });
 
-/** Toast de feedback rápido. */
 let toastTimer = null;
 function toast(mensagem, duracao = 2200) {
   const el = $('#toast');
@@ -839,7 +943,6 @@ function toast(mensagem, duracao = 2200) {
   toastTimer = setTimeout(() => el.classList.add('oculto'), duracao);
 }
 
-/** Máscara de telefone brasileiro: (99) 99999-9999 */
 function mascaraTelefone(valor) {
   const d = String(valor).replace(/\D/g, '').slice(0, 11);
   if (d.length <= 2) return d;
@@ -848,7 +951,6 @@ function mascaraTelefone(valor) {
   return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 }
 
-/** Converte "100,50" ou "100.50" em número. */
 function paraNumero(valor) {
   if (valor === null || valor === undefined) return 0;
   const limpo = String(valor).replace(/[^\d,.-]/g, '').replace(',', '.');
@@ -856,9 +958,17 @@ function paraNumero(valor) {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** 🆕 Retorna uma URL de imagem válida (ou placeholder com o nome do produto). */
+function urlImagemValida(url, nome = 'Produto') {
+  const limpa = String(url || '').trim();
+  if (!limpa) {
+    return `https://placehold.co/600x450/f5f5f4/a8a29e?text=${encodeURIComponent(nome)}`;
+  }
+  return limpa;
+}
+
 /** Define qual tela principal está visível. */
 function mostrarView(nome) {
-  /* 🆕 'historico' incluído na lista de views controladas */
   ['cliente', 'checkout', 'pix', 'confirmacao', 'historico', 'admin'].forEach((v) => {
     const el = document.getElementById('view-' + v);
     if (el) el.classList.toggle('oculto', v !== nome);
@@ -867,14 +977,11 @@ function mostrarView(nome) {
   atualizarHeader();
 }
 
-/* ---------- Geração de PIX "Copia e Cola" (padrão EMV / BR Code) ---------- */
-/** Monta um campo EMV: ID + tamanho (2 dígitos) + valor. */
+/* ---------- PIX "Copia e Cola" (EMV / BR Code) ---------- */
 function emv(id, valor) {
   const v = String(valor);
   return `${id}${String(v.length).padStart(2, '0')}${v}`;
 }
-
-/** CRC16-CCITT (0x1021) — obrigatório no BR Code. */
 function crc16(payload) {
   let crc = 0xFFFF;
   for (let i = 0; i < payload.length; i++) {
@@ -886,31 +993,15 @@ function crc16(payload) {
   }
   return crc.toString(16).toUpperCase().padStart(4, '0');
 }
-
-/**
- * Gera o payload PIX estático (Copia e Cola) — usado no modo SIMULAÇÃO.
- * Em produção, quem gera esse código é o Mercado Pago (qr_code no response).
- */
 function gerarPixCopiaECola({ chave, nome, cidade, valor, txid = '***' }) {
-  const merchantAccount =
-    emv('26', emv('00', 'BR.GOV.BCB.PIX') + emv('01', chave));
-
+  const merchantAccount = emv('26', emv('00', 'BR.GOV.BCB.PIX') + emv('01', chave));
   const payload =
-    emv('00', '01') +
-    merchantAccount +
-    emv('52', '0000') +
-    emv('53', '986') +                       // 986 = BRL
-    emv('54', Number(valor).toFixed(2)) +
-    emv('58', 'BR') +
-    emv('59', nome.substring(0, 25)) +
-    emv('60', cidade.substring(0, 15)) +
-    emv('62', emv('05', txid)) +
-    '6304';
-
+    emv('00', '01') + merchantAccount + emv('52', '0000') + emv('53', '986') +
+    emv('54', Number(valor).toFixed(2)) + emv('58', 'BR') +
+    emv('59', nome.substring(0, 25)) + emv('60', cidade.substring(0, 15)) +
+    emv('62', emv('05', txid)) + '6304';
   return payload + crc16(payload);
 }
-
-/** Gera uma imagem de QR Code (usada apenas no modo simulação). */
 function urlQrCode(texto) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=0&data=${encodeURIComponent(texto)}`;
 }
@@ -920,18 +1011,26 @@ function urlQrCode(texto) {
  * 5) CLIENTE — CARDÁPIO, PRODUTO E CARRINHO
  * ========================================================================== */
 
-/* ---------- 5.1 Render: chips de categoria ---------- */
+/* ---------- 5.1 Render: chips de categoria ----------
+   A pseudo-categoria "todos" é prependada dinamicamente.                     */
 function renderCategorias() {
+  /* Se a categoria ativa sumiu (foi removida pelo admin), volta para "todos" */
+  if (estado.categoriaAtiva !== 'todos' && !CATEGORIAS.find((c) => c.id === estado.categoriaAtiva)) {
+    estado.categoriaAtiva = 'todos';
+  }
+
+  const todas = [CATEGORIA_TODOS, ...CATEGORIAS];
   const alvo = $('#listaCategorias');
-  alvo.innerHTML = CATEGORIAS.map((c) => {
+
+  alvo.innerHTML = todas.map((c) => {
     const ativa = estado.categoriaAtiva === c.id;
     return `
-      <button data-categoria="${c.id}"
+      <button data-categoria="${esc(c.id)}"
         class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition active:scale-95
                ${ativa
                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25'
                  : 'bg-white text-stone-600 hover:bg-stone-50 shadow-card'}">
-        <span>${c.icone}</span> ${c.nome}
+        <span>${esc(c.icone || '🍽️')}</span> ${esc(c.nome)}
       </button>`;
   }).join('');
 }
@@ -944,18 +1043,18 @@ function renderProdutos() {
     const okCategoria = estado.categoriaAtiva === 'todos' || p.categoria === estado.categoriaAtiva;
     const okBusca = !termo
       || p.nome.toLowerCase().includes(termo)
-      || p.desc.toLowerCase().includes(termo);
+      || (p.desc || '').toLowerCase().includes(termo);
     return okCategoria && okBusca;
   });
 
   $('#avisoVazio').classList.toggle('oculto', lista.length > 0);
 
   $('#gradeProdutos').innerHTML = lista.map((p) => `
-    <article data-produto="${p.id}"
+    <article data-produto="${esc(p.id)}"
       class="group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition cursor-pointer flex flex-col active:scale-[.98]">
 
       <div class="relative aspect-[4/3] overflow-hidden bg-stone-100">
-        <img src="${p.img}" alt="${esc(p.nome)}" loading="lazy"
+        <img src="${esc(urlImagemValida(p.img, p.nome))}" alt="${esc(p.nome)}" loading="lazy"
              onerror="this.onerror=null;this.src='https://placehold.co/600x450/f5f5f4/a8a29e?text=Sem+Foto'"
              class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
         ${p.destaque ? `
@@ -966,11 +1065,11 @@ function renderProdutos() {
 
       <div class="p-3 flex flex-col flex-1">
         <h3 class="font-bold text-[13px] sm:text-sm leading-snug text-ink">${esc(p.nome)}</h3>
-        <p class="text-[11px] text-stone-500 leading-snug mt-1 line-clamp-2 flex-1">${esc(p.desc)}</p>
+        <p class="text-[11px] text-stone-500 leading-snug mt-1 line-clamp-2 flex-1">${esc(p.desc || '')}</p>
 
         <div class="flex items-center justify-between gap-2 mt-3">
           <span class="font-black text-brand-600 text-sm sm:text-base">${money(p.preco)}</span>
-          <button data-adicionar="${p.id}"
+          <button data-adicionar="${esc(p.id)}"
             class="w-9 h-9 shrink-0 grid place-items-center rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-black text-lg shadow-md shadow-brand-600/25 transition active:scale-90">
             +
           </button>
@@ -989,7 +1088,7 @@ function abrirModalProduto(produtoId) {
 
   $('#conteudoModalProduto').innerHTML = `
     <div class="relative h-48 sm:h-56 bg-stone-100 shrink-0">
-      <img src="${produto.img}" alt="${esc(produto.nome)}"
+      <img src="${esc(urlImagemValida(produto.img, produto.nome))}" alt="${esc(produto.nome)}"
            onerror="this.onerror=null;this.src='https://placehold.co/800x450/f5f5f4/a8a29e?text=Sem+Foto'"
            class="w-full h-full object-cover sm:rounded-t-3xl" />
       <button data-fechar-produto
@@ -998,7 +1097,7 @@ function abrirModalProduto(produtoId) {
 
     <div class="p-5">
       <h3 class="text-xl font-black">${esc(produto.nome)}</h3>
-      <p class="text-sm text-stone-500 mt-1.5 leading-relaxed">${esc(produto.desc)}</p>
+      <p class="text-sm text-stone-500 mt-1.5 leading-relaxed">${esc(produto.desc || '')}</p>
       <p class="text-2xl font-black text-brand-600 mt-3">${money(produto.preco)}</p>
 
       <div class="mt-5">
@@ -1059,7 +1158,10 @@ function adicionarAoCarrinho(produtoId, qtd = 1, obs = '') {
   }
 
   const produto = PRODUTOS.find((p) => p.id === produtoId);
-  if (!produto) return;
+  if (!produto) {
+    toast('⚠️ Produto indisponível');
+    return;
+  }
 
   const obsLimpa = obs.trim();
   const linhaId = `${produtoId}::${obsLimpa.toLowerCase()}`;
@@ -1103,13 +1205,9 @@ function removerItem(linhaId) {
 }
 
 /* ---------- 5.5 Cálculos do carrinho ---------- */
-const subtotalCarrinho = () =>
-  estado.carrinho.reduce((soma, i) => soma + i.preco * i.qtd, 0);
+const subtotalCarrinho = () => estado.carrinho.reduce((soma, i) => soma + i.preco * i.qtd, 0);
+const totalItens       = () => estado.carrinho.reduce((soma, i) => soma + i.qtd, 0);
 
-const totalItens = () =>
-  estado.carrinho.reduce((soma, i) => soma + i.qtd, 0);
-
-/** Taxa de entrega a partir do bairro (0 se o carrinho estiver vazio). */
 function taxaPorBairro(bairro) {
   if (!bairro) return 0;
   const t = CONFIG.entrega.bairros[bairro];
@@ -1136,24 +1234,24 @@ function renderItensCarrinho() {
 
   container.innerHTML = estado.carrinho.map((item) => `
     <div class="flex gap-3 py-3.5 border-b border-stone-100 last:border-0">
-      <img src="${item.img}" alt="${esc(item.nome)}"
+      <img src="${esc(urlImagemValida(item.img, item.nome))}" alt="${esc(item.nome)}"
            onerror="this.onerror=null;this.src='https://placehold.co/120x120/f5f5f4/a8a29e?text=+'""
            class="w-14 h-14 rounded-xl object-cover bg-stone-100 shrink-0" />
 
       <div class="flex-1 min-w-0">
         <div class="flex items-start justify-between gap-2">
           <h4 class="font-bold text-sm leading-snug">${esc(item.nome)}</h4>
-          <button data-remover="${item.linhaId}" class="text-stone-300 hover:text-red-500 transition shrink-0 text-lg leading-none">🗑</button>
+          <button data-remover="${esc(item.linhaId)}" class="text-stone-300 hover:text-red-500 transition shrink-0 text-lg leading-none">🗑</button>
         </div>
 
         ${item.obs ? `<p class="text-[11px] text-amber-700 bg-amber-50 rounded-md px-2 py-1 mt-1 inline-block">📝 ${esc(item.obs)}</p>` : ''}
 
         <div class="flex items-center justify-between mt-2">
           <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-0.5">
-            <button data-qtd="-1" data-linha="${item.linhaId}"
+            <button data-qtd="-1" data-linha="${esc(item.linhaId)}"
               class="w-7 h-7 grid place-items-center rounded-md bg-white shadow-sm font-black hover:bg-stone-50 transition">−</button>
             <span class="w-7 text-center font-bold text-sm">${item.qtd}</span>
-            <button data-qtd="1" data-linha="${item.linhaId}"
+            <button data-qtd="1" data-linha="${esc(item.linhaId)}"
               class="w-7 h-7 grid place-items-center rounded-md bg-white shadow-sm font-black hover:bg-stone-50 transition">+</button>
           </div>
           <span class="font-black text-sm text-brand-600">${money(item.preco * item.qtd)}</span>
@@ -1163,7 +1261,6 @@ function renderItensCarrinho() {
   `).join('');
 }
 
-/** Atualiza badges, totais e barra flutuante. */
 function atualizarCarrinhoUI() {
   const qtd = totalItens();
   const subtotal = subtotalCarrinho();
@@ -1197,12 +1294,22 @@ function fecharCarrinho() {
   document.body.style.overflow = '';
 }
 
+/** 🆕 Remove do carrinho produtos que foram excluídos do cardápio pelo admin. */
+function limparCarrinhoDeProdutosRemovidos() {
+  const idsValidos = new Set(PRODUTOS.map((p) => p.id));
+  const antes = estado.carrinho.length;
+  estado.carrinho = estado.carrinho.filter((i) => idsValidos.has(i.produtoId));
+  if (estado.carrinho.length !== antes) {
+    salvarCarrinho();
+    atualizarCarrinhoUI();
+  }
+}
+
 
 /* ============================================================================
  * 6) CHECKOUT
  * ========================================================================== */
 
-/** Preenche o <select> de bairros a partir da CONFIG. */
 function renderBairros() {
   const select = $('#cliBairro');
   select.innerHTML = '<option value="">Selecione seu bairro…</option>' +
@@ -1211,7 +1318,6 @@ function renderBairros() {
     ).join('');
 }
 
-/** Renderiza o resumo lateral do checkout. */
 function renderResumoCheckout() {
   const subtotal = subtotalCarrinho();
   const bairro = $('#cliBairro')?.value || '';
@@ -1242,7 +1348,6 @@ function renderResumoCheckout() {
   `;
 }
 
-/** Abre a tela de checkout. */
 function irParaCheckout() {
   if (estado.carrinho.length === 0) {
     toast('Seu carrinho está vazio');
@@ -1257,7 +1362,6 @@ function irParaCheckout() {
   renderResumoCheckout();
 }
 
-/** Valida os campos obrigatórios do checkout. */
 function validarCheckout() {
   const obrigatorios = [
     ['#cliNome', 'Informe seu nome'],
@@ -1288,13 +1392,11 @@ function validarCheckout() {
   return true;
 }
 
-/** Lê o formulário e monta o objeto do pedido. */
 function montarPedido() {
   const bairro = $('#cliBairro').value;
   const pagamento = document.querySelector('input[name="pagamento"]:checked')?.value || 'dinheiro';
   const subtotal = subtotalCarrinho();
   const taxa = taxaPorBairro(bairro);
-
   const numero = estado.sequencia;
 
   return {
@@ -1318,7 +1420,7 @@ function montarPedido() {
     valores: { subtotal, taxa, total: subtotal + taxa },
 
     pagamento: {
-      tipo: pagamento,                                  // 'pix' | 'cartao' | 'dinheiro'
+      tipo: pagamento,
       trocoPara: pagamento === 'dinheiro' ? paraNumero($('#cliTroco').value) : 0,
       status: pagamento === 'pix' ? 'pendente' : 'na_entrega',
       pixId: null
@@ -1334,30 +1436,24 @@ function montarPedido() {
 /**
  * Cria um pagamento PIX no Mercado Pago.
  *
- * Endpoint: POST https://api.mercadopago.com/v1/payments
- * Header:   Authorization: Bearer <ACCESS_TOKEN_DA_CONTA_PJ>
+ * Endpoint:  POST https://api.mercadopago.com/v1/payments
+ * Header:    Authorization: Bearer <ACCESS_TOKEN_DA_CONTA_PJ>
+ *            X-Idempotency-Key: <uuid único>
  *
- * Payload mínimo para PIX:
- * {
- *   "transaction_amount": 78.80,
- *   "description": "Pedido #012 - Sabor da Tia",
- *   "payment_method_id": "pix",
- *   "external_reference": "<id-interno-do-pedido>",
- *   "notification_url": "https://seu-backend/webhook",
- *   "payer": { "email": "...", "first_name": "...", "last_name": "...",
- *              "identification": { "type": "CPF", "number": "..." } }
- * }
+ * Payload mínimo:
+ *   { transaction_amount, description, payment_method_id:"pix",
+ *     external_reference, notification_url, payer{...} }
  *
- * Resposta relevante:
- *   data.point_of_interaction.transaction_data.qr_code        → Copia e Cola
- *   data.point_of_interaction.transaction_data.qr_code_base64 → PNG base64
- *   data.id                                                   → ID do pagamento
- *   data.status                                               → 'pending' | 'approved' | ...
+ * Resposta (relevante):
+ *   data.id                                                    → ID do pagamento
+ *   data.status                                                → 'pending' | 'approved' | ...
+ *   data.point_of_interaction.transaction_data.qr_code         → Copia e Cola
+ *   data.point_of_interaction.transaction_data.qr_code_base64  → PNG base64
  */
 async function criarPagamentoPix(pedido) {
   const { mercadoPago, restaurante } = CONFIG;
 
-  /* ---------- MODO SIMULAÇÃO (sem chamar a API) ---------- */
+  /* ---------- MODO SIMULAÇÃO ---------- */
   if (mercadoPago.simulacao) {
     const copiaECola = gerarPixCopiaECola({
       chave: restaurante.pixChave,
@@ -1391,25 +1487,17 @@ async function criarPagamentoPix(pedido) {
     }
   };
 
-  /* Se houver backend/proxy configurado, ele cuida do Bearer Token.
-     Caso contrário, tentamos a chamada direta (funciona apenas em ambiente
-     controlado — o navegador costuma bloquear por CORS).                   */
   const url = mercadoPago.backendProxy || 'https://api.mercadopago.com/v1/payments';
 
   const headers = {
     'Content-Type': 'application/json',
-    'X-Idempotency-Key': pedido.id          // evita cobranças duplicadas
+    'X-Idempotency-Key': pedido.id
   };
   if (!mercadoPago.backendProxy) {
     headers['Authorization'] = `Bearer ${mercadoPago.accessToken}`;
   }
 
-  const resposta = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload)
-  });
-
+  const resposta = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
   const dados = await resposta.json();
 
   if (!resposta.ok) {
@@ -1417,7 +1505,6 @@ async function criarPagamentoPix(pedido) {
     throw new Error(dados.message || 'Falha ao gerar o PIX. Tente novamente.');
   }
 
-  /* Extrai os dados do QR Code do PIX */
   const tx = dados.point_of_interaction?.transaction_data || {};
 
   return {
@@ -1430,7 +1517,6 @@ async function criarPagamentoPix(pedido) {
   };
 }
 
-/** Consulta o status atual do pagamento (usado no polling). */
 async function consultarStatusPagamento(paymentId) {
   const { mercadoPago } = CONFIG;
   if (mercadoPago.simulacao) return 'pending';
@@ -1447,14 +1533,13 @@ async function consultarStatusPagamento(paymentId) {
   try {
     const r = await fetch(base, { headers });
     const d = await r.json();
-    return d.status;                 // 'pending' | 'approved' | 'rejected' | ...
+    return d.status;
   } catch (e) {
     console.warn('[Mercado Pago] Falha ao consultar status:', e);
     return 'pending';
   }
 }
 
-/** Abre a tela do PIX e inicia a geração do QR Code. */
 async function abrirTelaPix(pedido) {
   mostrarView('pix');
 
@@ -1469,7 +1554,6 @@ async function abrirTelaPix(pedido) {
     const pix = await criarPagamentoPix(pedido);
     estado.pix = { ...pix, pedidoId: pedido.id };
 
-    /* Renderiza o QR Code */
     $('#pixQrContainer').innerHTML = `
       <img src="${pix.qrUrl}" alt="QR Code PIX"
            onerror="this.onerror=null;this.parentElement.innerHTML='<p class=&quot;text-xs text-red-600&quot;>Não foi possível carregar o QR Code.</p>'"
@@ -1479,11 +1563,9 @@ async function abrirTelaPix(pedido) {
 
     $('#pixCopiaCola').value = pix.copiaECola || '(indisponível)';
 
-    /* Atualiza o pedido com o ID do pagamento */
     pedido.pagamento.pixId = pix.paymentId;
     salvarPedidos();
 
-    /* Inicia o polling do status (apenas no modo real) */
     if (!pix.simulado) iniciarPollingPix(pedido);
 
   } catch (erro) {
@@ -1499,7 +1581,6 @@ async function abrirTelaPix(pedido) {
   }
 }
 
-/** Faz polling do status do pagamento até ser aprovado. */
 let pollingTimer = null;
 function iniciarPollingPix(pedido) {
   clearInterval(pollingTimer);
@@ -1516,7 +1597,6 @@ function iniciarPollingPix(pedido) {
   }, CONFIG.mercadoPago.intervaloPolling);
 }
 
-/** Marca o PIX como pago e leva o cliente para a confirmação. */
 function confirmarPagamentoPix(pago = true) {
   clearInterval(pollingTimer);
 
@@ -1540,7 +1620,6 @@ const ROTULOS_PAGAMENTO = {
   dinheiro: 'Dinheiro'
 };
 
-/** Monta a mensagem de texto enviada ao WhatsApp do restaurante. */
 function montarMensagemWhatsApp(pedido) {
   const { cliente, itens, valores, pagamento, numero } = pedido;
 
@@ -1585,13 +1664,10 @@ function montarMensagemWhatsApp(pedido) {
   ].join('\n');
 }
 
-/** Monta o link wa.me e faz o redirect. */
 function linkWhatsApp(pedido) {
-  const mensagem = montarMensagemWhatsApp(pedido);
-  return `https://wa.me/${CONFIG.restaurante.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+  return `https://wa.me/${CONFIG.restaurante.whatsapp}?text=${encodeURIComponent(montarMensagemWhatsApp(pedido))}`;
 }
 
-/** Renderiza a tela de confirmação. */
 function mostrarConfirmacao(pedido) {
   estado.pedidoAtual = pedido;
 
@@ -1612,7 +1688,6 @@ function mostrarConfirmacao(pedido) {
 
   mostrarView('confirmacao');
 
-  /* Limpa o carrinho — o pedido já foi registrado */
   estado.carrinho = [];
   salvarCarrinho();
   atualizarCarrinhoUI();
@@ -1622,10 +1697,9 @@ const totalItensDe = (pedido) => pedido.itens.reduce((s, i) => s + i.qtd, 0);
 
 
 /* ============================================================================
- * 9) PAINEL DA COZINHA (ADMIN)
+ * 9) PAINEL DA COZINHA (ADMIN) — Kanban de pedidos
  * ========================================================================== */
 
-/** Definição das etapas do preparo. */
 const ETAPAS = [
   { id: 'novo',      titulo: 'Novo Pedido',      icone: '🔔', cor: 'bg-amber-100 text-amber-800 border-amber-200',    acao: 'Aceitar e preparar' },
   { id: 'preparo',   titulo: 'Em Preparo',       icone: '👨‍🍳', cor: 'bg-sky-100 text-sky-800 border-sky-200',           acao: 'Saiu para entrega' },
@@ -1635,7 +1709,6 @@ const ETAPAS = [
 
 const indiceEtapa = (id) => Math.max(0, ETAPAS.findIndex((e) => e.id === id));
 
-/** Avança o pedido para a próxima etapa. */
 function avancarStatus(pedidoId) {
   const pedido = estado.pedidos.find((p) => p.id === pedidoId);
   if (!pedido) return;
@@ -1651,7 +1724,6 @@ function avancarStatus(pedidoId) {
   toast(`Pedido #${String(pedido.numero).padStart(3, '0')} → ${ETAPAS[atual + 1].titulo}`);
 }
 
-/** Volta o pedido para a etapa anterior (correção de engano). */
 function retrocederStatus(pedidoId) {
   const pedido = estado.pedidos.find((p) => p.id === pedidoId);
   if (!pedido) return;
@@ -1663,7 +1735,6 @@ function retrocederStatus(pedidoId) {
   renderAdmin();
 }
 
-/** Remove um pedido do painel. */
 function excluirPedido(pedidoId) {
   if (!confirm('Remover este pedido definitivamente?')) return;
   estado.pedidos = estado.pedidos.filter((p) => p.id !== pedidoId);
@@ -1671,7 +1742,6 @@ function excluirPedido(pedidoId) {
   renderAdmin();
 }
 
-/** Métricas rápidas do topo do painel. */
 function renderMetricas() {
   const hoje = new Date().toDateString();
   const pedidosHoje = estado.pedidos.filter((p) => new Date(p.criadoEm).toDateString() === hoje);
@@ -1694,7 +1764,6 @@ function renderMetricas() {
   `).join('');
 }
 
-/** Renderiza um card de pedido no kanban. */
 function cardPedido(pedido) {
   const etapaAtual = indiceEtapa(pedido.status);
   const proxima = ETAPAS[etapaAtual + 1];
@@ -1749,7 +1818,7 @@ function cardPedido(pedido) {
 
       <div class="p-3 pt-0 flex gap-2">
         ${proxima ? `
-          <button data-avancar="${pedido.id}"
+          <button data-avancar="${esc(pedido.id)}"
             class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-extrabold transition active:scale-95">
             ${proxima.icone} ${ETAPAS[etapaAtual].acao}
           </button>` : `
@@ -1758,17 +1827,16 @@ function cardPedido(pedido) {
           </span>`}
 
         ${etapaAtual > 0 ? `
-          <button data-retroceder="${pedido.id}" title="Voltar etapa"
+          <button data-retroceder="${esc(pedido.id)}" title="Voltar etapa"
             class="w-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-500 text-sm font-bold transition">↩</button>` : ''}
 
-        <button data-excluir="${pedido.id}" title="Excluir pedido"
+        <button data-excluir="${esc(pedido.id)}" title="Excluir pedido"
           class="w-10 rounded-xl bg-stone-100 hover:bg-red-50 hover:text-red-600 text-stone-400 text-sm transition">🗑</button>
       </div>
     </article>
   `;
 }
 
-/** Renderiza o kanban completo. */
 function renderAdmin() {
   if (!estado.adminLogado) {
     $('#adminLogin').classList.remove('oculto');
@@ -1781,7 +1849,7 @@ function renderAdmin() {
 
   renderMetricas();
 
-  /* Ordena do mais recente para o mais antigo */
+  /* Kanban */
   const ordenados = [...estado.pedidos].sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
 
   $('#kanban').innerHTML = ETAPAS.map((etapa) => {
@@ -1802,6 +1870,39 @@ function renderAdmin() {
       </div>
     `;
   }).join('');
+
+  /* Sincroniza visibilidade das abas + conteúdo da aba ativa */
+  aplicarAbaAdmin(estado.adminTab);
+}
+
+/** 🆕 Aplica a aba ativa no painel admin (pedidos | cardapio). */
+function aplicarAbaAdmin(tab) {
+  estado.adminTab = tab;
+
+  const isPedidos  = tab === 'pedidos';
+  const isCardapio = tab === 'cardapio';
+
+  $('#adminTabPedidos').classList.toggle('oculto', !isPedidos);
+  $('#adminTabCardapio').classList.toggle('oculto', !isCardapio);
+
+  $('#tabBtnPedidos').classList.toggle('ativo', isPedidos);
+  $('#tabBtnCardapio').classList.toggle('ativo', isCardapio);
+
+  /* Botões que só fazem sentido na aba de pedidos */
+  $('#btnLimparConcluidos').classList.toggle('oculto', !isPedidos);
+
+  if (isCardapio) {
+    renderAdminCardapio();
+    atualizarSelectFormCategoria();
+  }
+}
+
+/** 🆕 Atualiza o select de categorias no formulário (caso esteja aberto). */
+function atualizarSelectFormCategoria() {
+  const sel = $('#prodCategoria');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecione…</option>' +
+    CATEGORIAS.map((c) => `<option value="${esc(c.id)}">${esc(c.icone || '')} ${esc(c.nome)}</option>`).join('');
 }
 
 /** Efetua o login no painel. */
@@ -1823,15 +1924,13 @@ function entrarAdmin() {
 
 
 /* ============================================================================
- * 10) 🆕 HISTÓRICO DE PEDIDOS POR TELEFONE
+ * 10) HISTÓRICO DE PEDIDOS POR TELEFONE
  * ========================================================================== */
 
-/** Renderiza um card individual de pedido no histórico do cliente. */
 function cardHistorico(pedido) {
   const etapaAtual = indiceEtapa(pedido.status);
   const etapa = ETAPAS[etapaAtual];
 
-  /* Rótulo de pagamento enriquecido com status do PIX */
   let pagamentoLabel = ROTULOS_PAGAMENTO[pedido.pagamento.tipo] || '—';
   if (pedido.pagamento.tipo === 'pix') {
     pagamentoLabel += pedido.pagamento.status === 'pago' ? ' · ✅ Pago' : ' · ⏳ Pendente';
@@ -1852,7 +1951,6 @@ function cardHistorico(pedido) {
   return `
     <article class="bg-white rounded-2xl shadow-card border border-stone-200 overflow-hidden mb-3 anim-fade">
 
-      <!-- Cabeçalho: número + status -->
       <div class="px-5 py-3.5 flex items-center justify-between gap-3 border-b border-stone-100">
         <div class="min-w-0">
           <p class="font-black text-base leading-none">
@@ -1865,15 +1963,11 @@ function cardHistorico(pedido) {
         </span>
       </div>
 
-      <!-- Itens -->
       <div class="px-5 py-3">
         <p class="text-[10px] font-bold uppercase tracking-wide text-stone-400 mb-1.5">Itens</p>
-        <ul class="text-[12.5px] space-y-1">
-          ${itens}
-        </ul>
+        <ul class="text-[12.5px] space-y-1">${itens}</ul>
       </div>
 
-      <!-- Rodapé: subtotal, taxa, total, pagamento -->
       <div class="px-5 py-3.5 bg-stone-50 border-t border-stone-100 text-[12px]">
         <div class="flex justify-between text-stone-500"><span>Subtotal</span><span>${money(pedido.valores.subtotal)}</span></div>
         <div class="flex justify-between text-stone-500 mt-0.5"><span>Taxa de entrega (${esc(pedido.cliente.bairro)})</span><span>${money(pedido.valores.taxa)}</span></div>
@@ -1889,16 +1983,11 @@ function cardHistorico(pedido) {
   `;
 }
 
-/**
- * Filtra os pedidos no localStorage pelo número de telefone digitado
- * e renderiza o resultado na tela de histórico.
- */
 function buscarPedidosPorTelefone() {
   const input = $('#historicoTelefone');
   const digitos = input.value.replace(/\D/g, '');
   const container = $('#historicoResultado');
 
-  /* Validação básica */
   if (digitos.length < 10) {
     toast('⚠️ Digite o número completo do WhatsApp');
     input.focus();
@@ -1909,12 +1998,10 @@ function buscarPedidosPorTelefone() {
 
   estado.historicoTelefone = digitos;
 
-  /* Filtra por inclusão (tolera formatos com máscara diferentes) */
   const encontrados = estado.pedidos
     .filter((p) => (p.cliente?.telefone || '').replace(/\D/g, '').includes(digitos))
     .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
 
-  /* Nenhum resultado */
   if (encontrados.length === 0) {
     container.innerHTML = `
       <div class="rounded-2xl border-2 border-dashed border-stone-200 bg-white/60 p-10 text-center">
@@ -1928,7 +2015,6 @@ function buscarPedidosPorTelefone() {
     return;
   }
 
-  /* Soma dos pedidos encontrados (útil pro cliente) */
   const totalGasto = encontrados.reduce((s, p) => s + (p.valores?.total || 0), 0);
 
   container.innerHTML = `
@@ -1946,11 +2032,9 @@ function buscarPedidosPorTelefone() {
   toast(`📦 ${encontrados.length} pedido(s) encontrado(s)`);
 }
 
-/** Abre a view de histórico, limpando o resultado anterior. */
 function abrirHistorico() {
   mostrarView('historico');
 
-  /* Pré-preenche com o telefone usado no último checkout, se houver */
   const input = $('#historicoTelefone');
   if (!input.value && estado.pedidos.length > 0) {
     const ultimo = estado.pedidos[estado.pedidos.length - 1];
@@ -1959,21 +2043,453 @@ function abrirHistorico() {
     }
   }
 
-  /* Foco automático no campo (garante UX boa no mobile) */
   setTimeout(() => input?.focus(), 120);
 }
 
 
 /* ============================================================================
- * 11) EVENTOS E BOOTSTRAP
+ * 11) 🆕 GERENCIADOR DE CARDÁPIO (ADMIN) — Categorias e Produtos
  * ========================================================================== */
 
-/* ---------- 11.1 Delegação: cardápio ---------- */
+/* ---------- 11.1 Contagem de produtos por categoria ---------- */
+const contarProdutosCategoria = (catId) => PRODUTOS.filter((p) => p.categoria === catId).length;
+
+/* ---------- 11.2 Render da aba "Gerenciar Cardápio" ---------- */
+function renderAdminCardapio() {
+  renderListaCategoriasAdmin();
+  renderListaProdutosAdmin();
+}
+
+/* ----- Categorias ----- */
+function renderListaCategoriasAdmin() {
+  const alvo = $('#listaCategoriasAdmin');
+
+  if (CATEGORIAS.length === 0) {
+    alvo.innerHTML = `
+      <p class="text-sm text-stone-400 italic py-3 px-1">
+        Nenhuma categoria cadastrada ainda. Adicione a primeira acima para começar.
+      </p>`;
+    return;
+  }
+
+  alvo.innerHTML = CATEGORIAS.map((c) => {
+    const qtd = contarProdutosCategoria(c.id);
+    return `
+      <div class="flex items-center justify-between gap-3 bg-stone-50 border border-stone-200 rounded-xl px-3.5 py-2.5">
+        <div class="flex items-center gap-3 min-w-0">
+          <span class="text-2xl shrink-0">${esc(c.icone || '🍽️')}</span>
+          <div class="min-w-0">
+            <p class="font-extrabold text-sm leading-tight truncate">${esc(c.nome)}</p>
+            <p class="text-[11px] text-stone-500">
+              ID: <code class="font-mono bg-white border border-stone-200 rounded px-1">${esc(c.id)}</code>
+              · <span class="${qtd ? 'text-emerald-600 font-bold' : 'text-stone-400'}">${qtd} produto(s)</span>
+            </p>
+          </div>
+        </div>
+        <button data-remover-categoria="${esc(c.id)}"
+          class="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg bg-white hover:bg-red-50 border border-stone-200 hover:border-red-200 hover:text-red-600 text-stone-500 transition">
+          🗑 Remover
+        </button>
+      </div>`;
+  }).join('');
+}
+
+/* ----- Produtos ----- */
+function renderListaProdutosAdmin() {
+  const alvo = $('#listaProdutosAdmin');
+  const contador = $('#contadorProdutosAdmin');
+
+  if (contador) {
+    contador.textContent = `${PRODUTOS.length} produto(s) cadastrado(s) · ${CATEGORIAS.length} categoria(s)`;
+  }
+
+  /* Se não houver categorias, bloqueia criação */
+  const btnNovo = $('#btnNovoProduto');
+  if (btnNovo) {
+    const semCategorias = CATEGORIAS.length === 0;
+    btnNovo.disabled = semCategorias;
+    btnNovo.classList.toggle('opacity-40', semCategorias);
+    btnNovo.classList.toggle('cursor-not-allowed', semCategorias);
+    btnNovo.title = semCategorias ? 'Cadastre uma categoria primeiro' : '';
+  }
+
+  if (PRODUTOS.length === 0) {
+    alvo.innerHTML = `
+      <div class="sm:col-span-2 lg:col-span-3 text-center py-10 text-stone-400">
+        <div class="text-4xl mb-2">🍽️</div>
+        <p class="font-bold text-stone-500">Nenhum produto cadastrado</p>
+        <p class="text-xs mt-1">Clique em "+ Novo Produto" para começar.</p>
+      </div>`;
+    return;
+  }
+
+  alvo.innerHTML = PRODUTOS.map((p) => {
+    const cat = CATEGORIAS.find((c) => c.id === p.categoria);
+    return `
+      <article class="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-card flex flex-col">
+
+        <div class="relative aspect-[16/10] bg-stone-100">
+          <img src="${esc(urlImagemValida(p.img, p.nome))}" alt="${esc(p.nome)}"
+               onerror="this.onerror=null;this.src='https://placehold.co/600x400/f5f5f4/a8a29e?text=Sem+Foto'"
+               class="w-full h-full object-cover" />
+          ${p.destaque ? `
+            <span class="absolute top-2 left-2 text-[10px] font-extrabold uppercase tracking-wide px-2 py-1 rounded-full bg-brand-600 text-white shadow">
+              🔥 Destaque
+            </span>` : ''}
+        </div>
+
+        <div class="p-3.5 flex flex-col flex-1">
+          <div class="flex items-start justify-between gap-2">
+            <h4 class="font-bold text-sm leading-snug">${esc(p.nome)}</h4>
+            <span class="font-black text-brand-600 text-sm whitespace-nowrap">${money(p.preco)}</span>
+          </div>
+
+          <p class="text-[11px] text-stone-500 mt-1 leading-snug line-clamp-2 flex-1">
+            ${esc(p.desc || 'Sem descrição')}
+          </p>
+
+          <p class="text-[10px] font-bold uppercase tracking-wide mt-2 ${cat ? 'text-stone-400' : 'text-red-500'}">
+            ${cat ? `${esc(cat.icone || '')} ${esc(cat.nome)}` : '⚠️ Categoria inexistente'}
+          </p>
+
+          <div class="flex gap-2 mt-3">
+            <button data-editar-produto="${esc(p.id)}"
+              class="flex-1 text-xs font-bold px-3 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 transition">
+              ✏️ Editar
+            </button>
+            <button data-excluir-produto="${esc(p.id)}" title="Excluir"
+              class="text-xs font-bold px-3 py-2 rounded-lg bg-white hover:bg-red-50 border border-stone-200 hover:border-red-200 hover:text-red-600 text-stone-500 transition">
+              🗑
+            </button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+/* ---------- 11.3 Categorias: adicionar e remover ---------- */
+
+/** Adiciona uma categoria a partir do formulário. */
+function adicionarCategoria(ev) {
+  if (ev) ev.preventDefault();
+
+  const idInput    = $('#catId');
+  const nomeInput  = $('#catNome');
+  const iconeInput = $('#catIcone');
+
+  const id    = String(idInput.value || '').trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9_-]/g, '');
+  const nome  = String(nomeInput.value || '').trim();
+  const icone = String(iconeInput.value || '').trim() || '🍽️';
+
+  if (!id)   { toast('⚠️ Informe um ID válido (letras e números)'); idInput.focus(); return; }
+  if (!nome) { toast('⚠️ Informe o nome da categoria');           nomeInput.focus(); return; }
+
+  if (id === 'todos') {
+    toast('⚠️ O ID "todos" é reservado — escolha outro');
+    idInput.focus();
+    return;
+  }
+  if (CATEGORIAS.some((c) => c.id === id)) {
+    toast('⚠️ Já existe uma categoria com esse ID');
+    idInput.focus();
+    return;
+  }
+
+  CATEGORIAS.push({ id, nome, icone });
+  salvarCategorias();
+
+  /* Limpa o formulário */
+  $('#formCategoria').reset();
+  iconeInput.value = '🍽️';
+
+  /* Atualiza todas as views instantaneamente */
+  renderCategorias();
+  renderProdutos();
+  renderAdminCardapio();
+  atualizarSelectFormCategoria();
+
+  toast(`✅ Categoria "${nome}" adicionada`);
+}
+
+/** Remove uma categoria (com cascata opcional nos produtos). */
+function removerCategoria(catId) {
+  const categoria = CATEGORIAS.find((c) => c.id === catId);
+  if (!categoria) return;
+
+  const qtd = contarProdutosCategoria(catId);
+
+  if (qtd > 0) {
+    const ok = confirm(
+      `A categoria "${categoria.nome}" possui ${qtd} produto(s).\n\n` +
+      `Ao removê-la, TODOS esses produtos também serão excluídos do cardápio.\n\n` +
+      `Deseja continuar?`
+    );
+    if (!ok) return;
+
+    const idsRemovidos = PRODUTOS.filter((p) => p.categoria === catId).map((p) => p.id);
+
+    /* Remove produtos vinculados */
+    PRODUTOS = PRODUTOS.filter((p) => p.categoria !== catId);
+    salvarProdutos();
+
+    /* Remove também do carrinho (evita item órfão) */
+    estado.carrinho = estado.carrinho.filter((i) => !idsRemovidos.includes(i.produtoId));
+    salvarCarrinho();
+  } else {
+    if (!confirm(`Remover a categoria "${categoria.nome}"?`)) return;
+  }
+
+  CATEGORIAS = CATEGORIAS.filter((c) => c.id !== catId);
+  salvarCategorias();
+
+  if (estado.categoriaAtiva === catId) estado.categoriaAtiva = 'todos';
+
+  renderCategorias();
+  renderProdutos();
+  atualizarCarrinhoUI();
+  renderAdminCardapio();
+  atualizarSelectFormCategoria();
+
+  toast(`🗑 Categoria "${categoria.nome}" removida`);
+}
+
+/* ---------- 11.4 Produtos: formulário (criar/editar) ---------- */
+
+/** Abre o modal de formulário — `produtoId = null` cria um novo. */
+function abrirFormProduto(produtoId = null) {
+  if (CATEGORIAS.length === 0) {
+    toast('⚠️ Cadastre ao menos uma categoria antes');
+    aplicarAbaAdmin('cardapio');
+    return;
+  }
+
+  const editando = produtoId !== null;
+  const produto = editando ? PRODUTOS.find((p) => p.id === produtoId) : null;
+
+  if (editando && !produto) {
+    toast('Produto não encontrado');
+    return;
+  }
+
+  estado.produtoEditandoId = produtoId;
+
+  const opcoesCategoria = CATEGORIAS.map((c) => {
+    const selecionado = produto?.categoria === c.id ? 'selected' : '';
+    return `<option value="${esc(c.id)}" ${selecionado}>${esc(c.icone || '')} ${esc(c.nome)}</option>`;
+  }).join('');
+
+  $('#conteudoFormProduto').innerHTML = `
+    <div class="p-6">
+      <div class="flex items-start justify-between gap-3 mb-5">
+        <div>
+          <h3 class="text-xl font-black">${editando ? '✏️ Editar Produto' : '➕ Novo Produto'}</h3>
+          <p class="text-xs text-stone-500 mt-0.5">
+            ${editando ? 'Ajuste os dados do item do cardápio.' : 'Preencha os dados para adicionar um novo item.'}
+          </p>
+        </div>
+        <button type="button" id="btnFecharFormProduto"
+          class="w-9 h-9 grid place-items-center rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 transition shrink-0">✕</button>
+      </div>
+
+      <form id="formProdutoAdmin" class="space-y-4">
+        <div>
+          <label class="rotulo" for="prodNome">Nome do produto *</label>
+          <input id="prodNome" class="campo" required maxlength="60" placeholder="Ex: Feijoada da Tia"
+                 value="${esc(produto?.nome || '')}" />
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="rotulo" for="prodCategoria">Categoria *</label>
+            <select id="prodCategoria" class="campo" required>
+              <option value="">Selecione…</option>
+              ${opcoesCategoria}
+            </select>
+          </div>
+          <div>
+            <label class="rotulo" for="prodPreco">Preço (R$) *</label>
+            <input id="prodPreco" class="campo" required inputmode="decimal" placeholder="0,00"
+                   value="${produto ? Number(produto.preco).toFixed(2).replace('.', ',') : ''}" />
+          </div>
+        </div>
+
+        <div>
+          <label class="rotulo" for="prodImagem">URL da Imagem</label>
+          <input id="prodImagem" type="url" class="campo" placeholder="https://images.unsplash.com/..."
+                 value="${esc(produto?.img || '')}" />
+          <p class="text-[11px] text-stone-400 mt-1.5">Cole o link de uma imagem do Unsplash ou de outro site. Deixe em branco para usar um placeholder.</p>
+        </div>
+
+        <div>
+          <label class="rotulo" for="prodDescricao">Descrição curta</label>
+          <textarea id="prodDescricao" rows="2" class="campo resize-none" maxlength="160"
+                    placeholder="Ex: Feijoada completa com arroz, couve, farofa e laranja.">${esc(produto?.desc || '')}</textarea>
+        </div>
+
+        <label class="flex items-center gap-3 cursor-pointer bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl p-3.5 transition select-none">
+          <input id="prodDestaque" type="checkbox" class="w-5 h-5 accent-brand-600" ${produto?.destaque ? 'checked' : ''} />
+          <span class="text-sm font-bold text-stone-700">🔥 Marcar como destaque no cardápio</span>
+        </label>
+
+        <div class="flex flex-col sm:flex-row gap-2 pt-2">
+          <button type="button" id="btnCancelarFormProduto"
+            class="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 font-bold text-sm transition">
+            Cancelar
+          </button>
+          <button type="submit"
+            class="flex-1 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-sm shadow-lg shadow-brand-600/25 transition active:scale-[.98]">
+            ${editando ? '💾 Salvar alterações' : '✅ Adicionar produto'}
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  $('#overlayAdminProduto').classList.remove('oculto');
+  $('#modalAdminProduto').classList.remove('oculto');
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => $('#prodNome')?.focus(), 100);
+}
+
+function fecharFormProduto() {
+  $('#overlayAdminProduto').classList.add('oculto');
+  $('#modalAdminProduto').classList.add('oculto');
+  document.body.style.overflow = '';
+  estado.produtoEditandoId = null;
+  $('#conteudoFormProduto').innerHTML = '';
+}
+
+/** Lê o formulário e salva (novo ou edição). */
+function salvarFormProduto(ev) {
+  if (ev) ev.preventDefault();
+
+  const nome      = String($('#prodNome')?.value || '').trim();
+  const categoria = String($('#prodCategoria')?.value || '').trim();
+  const precoTxt  = String($('#prodPreco')?.value || '').trim();
+  const imagem    = String($('#prodImagem')?.value || '').trim();
+  const descricao = String($('#prodDescricao')?.value || '').trim();
+  const destaque  = !!$('#prodDestaque')?.checked;
+
+  /* Validações */
+  if (nome.length < 2) {
+    toast('⚠️ Informe o nome do produto');
+    $('#prodNome')?.focus();
+    return;
+  }
+  if (!categoria) {
+    toast('⚠️ Selecione uma categoria');
+    $('#prodCategoria')?.focus();
+    return;
+  }
+  if (!CATEGORIAS.some((c) => c.id === categoria)) {
+    toast('⚠️ Categoria inválida');
+    return;
+  }
+
+  const preco = paraNumero(precoTxt);
+  if (!Number.isFinite(preco) || preco <= 0) {
+    toast('⚠️ Informe um preço válido (maior que zero)');
+    $('#prodPreco')?.focus();
+    return;
+  }
+
+  const imgFinal = urlImagemValida(imagem, nome);
+
+  const idEditando = estado.produtoEditandoId;
+
+  if (idEditando) {
+    /* ---------- EDIÇÃO ---------- */
+    const produto = PRODUTOS.find((p) => p.id === idEditando);
+    if (!produto) {
+      toast('Produto não encontrado');
+      fecharFormProduto();
+      return;
+    }
+
+    produto.nome     = nome;
+    produto.categoria= categoria;
+    produto.preco    = Number(preco.toFixed(2));
+    produto.img      = imgFinal;
+    produto.desc     = descricao;
+    produto.destaque = destaque;
+
+    salvarProdutos();
+
+    /* Sincroniza com o carrinho: atualiza nome/preço/imagem dos itens deste produto */
+    let carrinhoAlterado = false;
+    estado.carrinho.forEach((i) => {
+      if (i.produtoId === produto.id) {
+        i.nome  = produto.nome;
+        i.preco = produto.preco;
+        i.img   = produto.img;
+        carrinhoAlterado = true;
+      }
+    });
+    if (carrinhoAlterado) {
+      salvarCarrinho();
+      atualizarCarrinhoUI();
+    }
+
+    toast(`✏️ Produto "${nome}" atualizado`);
+
+  } else {
+    /* ---------- NOVO ---------- */
+    PRODUTOS.push({
+      id: novoIdProduto(),
+      categoria,
+      nome,
+      preco: Number(preco.toFixed(2)),
+      img: imgFinal,
+      desc: descricao,
+      destaque
+    });
+
+    salvarProdutos();
+    toast(`✅ Produto "${nome}" adicionado`);
+  }
+
+  fecharFormProduto();
+
+  /* Sincroniza TODAS as views instantaneamente */
+  renderCategorias();
+  renderProdutos();
+  renderAdminCardapio();
+}
+
+/** Exclui um produto do cardápio (com confirmação). */
+function excluirProdutoForm(produtoId) {
+  const produto = PRODUTOS.find((p) => p.id === produtoId);
+  if (!produto) return;
+
+  if (!confirm(`Excluir o produto "${produto.nome}" do cardápio?`)) return;
+
+  PRODUTOS = PRODUTOS.filter((p) => p.id !== produtoId);
+  salvarProdutos();
+
+  /* Remove também eventuais itens do carrinho */
+  estado.carrinho = estado.carrinho.filter((i) => i.produtoId !== produtoId);
+  salvarCarrinho();
+
+  renderCategorias();
+  renderProdutos();
+  atualizarCarrinhoUI();
+  renderAdminCardapio();
+
+  toast(`🗑 "${produto.nome}" removido`);
+}
+
+
+/* ============================================================================
+ * 12) EVENTOS E BOOTSTRAP
+ * ========================================================================== */
+
+/* ---------- 12.1 Delegação: cardápio (cliente) ---------- */
 document.addEventListener('click', (ev) => {
   const alvo = ev.target.closest('[data-produto], [data-adicionar], [data-categoria]');
   if (!alvo) return;
 
-  /* Chip de categoria */
   if (alvo.dataset.categoria) {
     estado.categoriaAtiva = alvo.dataset.categoria;
     renderCategorias();
@@ -1981,20 +2497,18 @@ document.addEventListener('click', (ev) => {
     return;
   }
 
-  /* Botão "+" dentro do card */
   if (alvo.dataset.adicionar) {
     ev.stopPropagation();
     abrirModalProduto(alvo.dataset.adicionar);
     return;
   }
 
-  /* Clique no card do produto */
   if (alvo.dataset.produto) {
     abrirModalProduto(alvo.dataset.produto);
   }
 });
 
-/* ---------- 11.2 Delegação: carrinho ---------- */
+/* ---------- 12.2 Delegação: carrinho ---------- */
 document.addEventListener('click', (ev) => {
   const btnQtd = ev.target.closest('[data-qtd][data-linha]');
   if (btnQtd) {
@@ -2009,7 +2523,7 @@ document.addEventListener('click', (ev) => {
   }
 });
 
-/* ---------- 11.3 Delegação: modal de produto ---------- */
+/* ---------- 12.3 Delegação: modal de produto (cliente) ---------- */
 $('#conteudoModalProduto').addEventListener('click', (ev) => {
   if (ev.target.closest('[data-fechar-produto]')) {
     fecharModalProduto();
@@ -2031,7 +2545,7 @@ $('#conteudoModalProduto').addEventListener('click', (ev) => {
   }
 });
 
-/* ---------- 11.4 Delegação: kanban ---------- */
+/* ---------- 12.4 Delegação: kanban (admin) ---------- */
 $('#kanban').addEventListener('click', (ev) => {
   const avancar = ev.target.closest('[data-avancar]');
   if (avancar) { avancarStatus(avancar.dataset.avancar); return; }
@@ -2043,7 +2557,67 @@ $('#kanban').addEventListener('click', (ev) => {
   if (excluir) { excluirPedido(excluir.dataset.excluir); }
 });
 
-/* ---------- 11.5 Botões de voltar ---------- */
+/* ---------- 12.5 🆕 Delegação: ações do gerenciador de cardápio ---------- */
+$('#adminPainel').addEventListener('click', (ev) => {
+  /* Abas */
+  const tabBtn = ev.target.closest('[data-admin-tab]');
+  if (tabBtn) {
+    aplicarAbaAdmin(tabBtn.dataset.adminTab);
+    return;
+  }
+
+  /* Ação: formulário de produto */
+  if (ev.target.closest('#btnNovoProduto')) {
+    abrirFormProduto(null);
+    return;
+  }
+
+  /* Ação: remover categoria */
+  const btnRemoverCat = ev.target.closest('[data-remover-categoria]');
+  if (btnRemoverCat) {
+    removerCategoria(btnRemoverCat.dataset.removerCategoria);
+    return;
+  }
+
+  /* Ação: editar produto */
+  const btnEditarProd = ev.target.closest('[data-editar-produto]');
+  if (btnEditarProd) {
+    abrirFormProduto(btnEditarProd.dataset.editarProduto);
+    return;
+  }
+
+  /* Ação: excluir produto */
+  const btnExcluirProd = ev.target.closest('[data-excluir-produto]');
+  if (btnExcluirProd) {
+    excluirProdutoForm(btnExcluirProd.dataset.excluirProduto);
+    return;
+  }
+
+  /* Reset do cardápio */
+  if (ev.target.closest('#btnResetarCardapio')) {
+    restaurarCardapioPadrao();
+    return;
+  }
+});
+
+/* Submissão do formulário de categoria */
+$('#formCategoria').addEventListener('submit', adicionarCategoria);
+
+/* ---------- 12.6 Delegação: modal do formulário de produto (admin) ---------- */
+$('#modalAdminProduto').addEventListener('click', (ev) => {
+  if (ev.target.closest('#btnFecharFormProduto') || ev.target.closest('#btnCancelarFormProduto')) {
+    fecharFormProduto();
+  }
+});
+
+$('#modalAdminProduto').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  salvarFormProduto(ev);
+});
+
+$('#overlayAdminProduto').addEventListener('click', fecharFormProduto);
+
+/* ---------- 12.7 Botões de voltar ---------- */
 document.addEventListener('click', (ev) => {
   const voltar = ev.target.closest('[data-voltar]');
   if (!voltar) return;
@@ -2056,10 +2630,10 @@ document.addEventListener('click', (ev) => {
   if (destino === 'cliente') atualizarCarrinhoUI();
 });
 
-/* ---------- 11.6 Bindings gerais ---------- */
+/* ---------- 12.8 Bindings gerais ---------- */
 function ligarEventos() {
 
-  /* Busca */
+  /* Busca do cardápio */
   $('#inputBusca').addEventListener('input', (e) => {
     estado.busca = e.target.value;
     renderProdutos();
@@ -2072,24 +2646,16 @@ function ligarEventos() {
   $('#overlayCarrinho').addEventListener('click', fecharCarrinho);
   $('#btnIrCheckout').addEventListener('click', irParaCheckout);
 
-  /* Modal de produto — fechar ao clicar no overlay */
+  /* Modal de produto (cliente) */
   $('#overlayProduto').addEventListener('click', fecharModalProduto);
 
-  /* 🆕 NOVO — Histórico: botão do header */
+  /* Histórico */
   $('#btnMeusPedidos').addEventListener('click', abrirHistorico);
-
-  /* 🆕 NOVO — Histórico: botão do hero (mobile) */
   $('#btnMeusPedidosHero').addEventListener('click', abrirHistorico);
-
-  /* 🆕 NOVO — Histórico: máscara no input de telefone */
   $('#historicoTelefone').addEventListener('input', (e) => {
     e.target.value = mascaraTelefone(e.target.value);
   });
-
-  /* 🆕 NOVO — Histórico: botão buscar */
   $('#btnBuscarHistorico').addEventListener('click', buscarPedidosPorTelefone);
-
-  /* 🆕 NOVO — Histórico: Enter no input dispara a busca */
   $('#historicoTelefone').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') buscarPedidosPorTelefone();
   });
@@ -2121,25 +2687,21 @@ function ligarEventos() {
 
     const pedido = montarPedido();
 
-    /* Avisa se a loja estiver fechada */
     if (!CONFIG.restaurante.aberto) {
       toast('😴 A loja está fechada. Pedido registrado como agendamento.');
     }
 
-    /* Registra o pedido no localStorage (aparece no painel da cozinha) */
     estado.pedidos.push(pedido);
     estado.sequencia += 1;
     salvarPedidos();
     estado.pedidoAtual = pedido;
 
-    /* Fluxo por forma de pagamento */
     if (pedido.pagamento.tipo === 'pix') {
       await abrirTelaPix(pedido);
     } else {
       mostrarConfirmacao(pedido);
     }
 
-    /* Re-renderiza o painel caso o admin esteja aberto em outra aba */
     renderAdmin();
   });
 
@@ -2211,7 +2773,8 @@ function ligarEventos() {
   /* Fecha modais com ESC */
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!$('#modalProduto').classList.contains('oculto')) fecharModalProduto();
+    if (!$('#modalAdminProduto').classList.contains('oculto')) fecharFormProduto();
+    else if (!$('#modalProduto').classList.contains('oculto')) fecharModalProduto();
     else if (!$('#drawerCarrinho').classList.contains('oculto')) fecharCarrinho();
   });
 
@@ -2220,13 +2783,23 @@ function ligarEventos() {
     if (e.key === CHAVES.pedidos || e.key === CHAVES.seq) {
       try { estado.pedidos = JSON.parse(localStorage.getItem(CHAVES.pedidos) || '[]'); } catch {}
       if (!$('#view-admin').classList.contains('oculto')) renderAdmin();
-      /* 🆕 Se o usuário estiver na tela de histórico e já tiver buscado,
-         re-renderiza o resultado para manter a lista atualizada. */
       if (!$('#view-historico').classList.contains('oculto') && estado.historicoTelefone) {
         const v = $('#historicoTelefone').value;
         if (v.replace(/\D/g, '').length >= 10) buscarPedidosPorTelefone();
       }
     }
+
+    /* 🆕 Sincronização do cardápio entre abas */
+    if (e.key === CHAVES.categorias || e.key === CHAVES.produtos) {
+      carregarCardapio();
+      renderCategorias();
+      renderProdutos();
+      limparCarrinhoDeProdutosRemovidos();
+      if (!$('#view-admin').classList.contains('oculto') && estado.adminTab === 'cardapio') {
+        renderAdminCardapio();
+      }
+    }
+
     if (e.key === 'sabordatia:loja') {
       CONFIG.restaurante.aberto = localStorage.getItem('sabordatia:loja') === 'true';
       atualizarHeader();
@@ -2234,7 +2807,7 @@ function ligarEventos() {
   });
 }
 
-/* ---------- 11.7 Cabeçalho dinâmico ---------- */
+/* ---------- 12.9 Cabeçalho dinâmico ---------- */
 function atualizarHeader() {
   const aberto = CONFIG.restaurante.aberto;
   const status = $('#headerStatus');
@@ -2251,23 +2824,20 @@ function atualizarHeader() {
 
   $('#btnAdminTexto').textContent = naAdmin ? 'Cardápio' : 'Cozinha';
 
-  /* 🆕 Esconde botão "Meus Pedidos" e carrinho durante o modo admin */
   $('#btnCarrinhoTopo').classList.toggle('oculto', naAdmin);
   $('#btnMeusPedidos').classList.toggle('oculto', naAdmin);
 
-  /* Barra flutuante de carrinho: esconde no admin e no histórico */
   $('#barraCarrinho').classList.toggle('oculto', naAdmin || noHistorico || totalItens() === 0);
 }
 
-/* ---------- 11.8 Inicialização ---------- */
+/* ---------- 12.10 Inicialização ---------- */
 function iniciar() {
   carregarEstado();
+  carregarCardapio();   // 🆕 carrega categorias/produtos do localStorage
 
-  /* Aplica configurações visuais */
   document.title = `${CONFIG.restaurante.nome} · Cardápio Digital`;
   $('#headerNome').textContent = CONFIG.restaurante.nome;
 
-  /* Restaura sessão do admin */
   estado.adminLogado = sessionStorage.getItem(CHAVES.sessao) === '1';
   $('#toggleLoja').checked = CONFIG.restaurante.aberto;
 
@@ -2283,7 +2853,7 @@ function iniciar() {
 
   console.log('%c🍲 Sabor da Tia — Cardápio Digital pronto!', 'color:#ea580c;font-weight:bold;font-size:14px');
   console.log('Painel da cozinha: clique em "Cozinha" (senha padrão: ' + CONFIG.admin.senha + ')');
-  console.log('📦 Histórico de pedidos: clique em "Meus Pedidos" ou informe seu WhatsApp.');
+  console.log('📦 Histórico: clique em "Meus Pedidos". 🍽️ Gerencie o cardápio na aba "Gerenciar Cardápio".');
 }
 
 document.addEventListener('DOMContentLoaded', iniciar);

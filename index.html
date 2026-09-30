@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#c2410c" />
+<title>Sabor da Tia · Cardápio Digital</title>
+
+<!-- ===================== TAILWIND CSS (CDN) ===================== -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  /* Configuração do tema Tailwind: paleta "brand" (laranja/vermelho) */
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            50:'#fff7ed', 100:'#ffedd5', 200:'#fed7aa', 300:'#fdba74',
+            400:'#fb923c', 500:'#f97316', 600:'#ea580c', 700:'#c2410c',
+            800:'#9a3412', 900:'#7c2d12'
+          },
+          ink: '#1c1917'
+        },
+        fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        boxShadow: {
+          soft: '0 8px 30px -12px rgba(28,25,23,.25)',
+          card: '0 2px 10px -2px rgba(28,25,23,.10)'
+        }
+      }
+    }
+  }
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Inter', system-ui, sans-serif; overscroll-behavior-y: none; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Animações utilitárias */
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp { from { transform: translateY(24px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+  @keyframes slideInRight { from { transform: translateX(100%) } to { transform: translateX(0) } }
+  @keyframes pop { 0% { transform: scale(.9) } 60% { transform: scale(1.04) } 100% { transform: scale(1) } }
+  .anim-fade { animation: fadeIn .2s ease-out both }
+  .anim-up { animation: slideUp .28s cubic-bezier(.16,1,.3,1) both }
+  .anim-right { animation: slideInRight .28s cubic-bezier(.16,1,.3,1) both }
+  .anim-pop { animation: pop .25s ease-out both }
+
+  /* Esconde elementos controlados por JS */
+  .oculto { display: none !important; }
+
+  /* Kanban scroll horizontal */
+  .kanban { scroll-snap-type: x proximity; }
+  .kanban > * { scroll-snap-align: start; }
+
+  /* Inputs base */
+  .campo {
+    width: 100%; border-radius: .75rem; border: 1px solid #e7e5e4; background: #fff;
+    padding: .7rem .9rem; font-size: .9rem; outline: none; transition: .15s;
+  }
+  .campo:focus { border-color: #f97316; box-shadow: 0 0 0 4px rgba(249,115,22,.15); }
+  .rotulo { font-size: .75rem; font-weight: 700; color: #57534e; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .35rem; display: block; }
+</style>
+</head>
+
+<body class="bg-stone-100 text-ink antialiased min-h-screen">
+
+<!-- ============================================================
+     TOPBAR
+     ============================================================ -->
+<header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-200">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+
+    <!-- Identidade + status -->
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white text-lg shadow-lg shadow-brand-500/30">
+        🍲
+      </div>
+      <div class="min-w-0">
+        <h1 id="headerNome" class="font-extrabold text-base sm:text-lg leading-none truncate">Sabor da Tia</h1>
+        <p id="headerStatus" class="text-[11px] font-semibold text-emerald-600 flex items-center gap-1.5 mt-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Aberto agora</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="flex items-center gap-2">
+      <button id="btnAdmin"
+        class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 transition">
+        👨‍🍳 <span id="btnAdminTexto">Cozinha</span>
+      </button>
+
+      <!-- 🆕 NOVO: Botão de Histórico de Pedidos (visível também no mobile, ícone colapsa o texto) -->
+      <button id="btnMeusPedidos"
+        class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 transition">
+        📦 <span class="hidden sm:inline">Meus Pedidos</span>
+      </button>
+
+      <button id="btnCarrinhoTopo"
+        class="relative inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-600/25 transition active:scale-95">
+        🛒 <span class="hidden sm:inline">Carrinho</span>
+        <span id="badgeCarrinhoTopo"
+          class="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 grid place-items-center rounded-full bg-ink text-white text-[10px] font-extrabold ring-2 ring-white">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+
+<main class="pb-32">
+
+  <!-- ============================================================
+       VIEW 1 · CARDÁPIO DO CLIENTE
+       ============================================================ -->
+  <section id="view-cliente">
+
+    <!-- Hero -->
+    <div class="bg-gradient-to-br from-brand-600 via-brand-600 to-brand-800 text-white">
+      <div class="max-w-6xl mx-auto px-4 py-7 sm:py-10">
+        <p class="text-brand-100 text-xs font-bold uppercase tracking-widest mb-1.5">Cardápio Digital</p>
+        <h2 class="text-2xl sm:text-4xl font-black leading-tight">Comida caseira,<br class="sm:hidden"> feita na hora 🍴</h2>
+        <p class="text-brand-100/90 text-sm mt-2 max-w-md">Escolha seus pratos favoritos, personalize e finalize o pedido em segundos.</p>
+
+        <!-- Busca -->
+        <div class="mt-5 relative max-w-md">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm">🔍</span>
+          <input id="inputBusca" type="search" placeholder="Buscar no cardápio..."
+            class="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/95 text-ink placeholder:text-stone-400 text-sm outline-none focus:ring-4 focus:ring-white/30 shadow-soft" />
+        </div>
+
+        <!-- 🆕 NOVO: Botão secundário do Histórico (somente mobile) -->
+        <button id="btnMeusPedidosHero"
+          class="sm:hidden mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/30 backdrop-blur text-white text-sm font-bold transition active:scale-95">
+          📦 Consultar Meus Pedidos por Celular
+        </button>
+      </div>
+    </div>
+
+    <!-- Categorias (chips) -->
+    <div class="sticky top-16 z-30 bg-stone-100/95 backdrop-blur border-b border-stone-200">
+      <div class="max-w-6xl mx-auto px-4">
+        <div id="listaCategorias" class="flex gap-2 overflow-x-auto no-scrollbar py-3"></div>
+      </div>
+    </div>
+
+    <!-- Grade de produtos -->
+    <div class="max-w-6xl mx-auto px-4 py-5">
+      <div id="gradeProdutos" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+      <div id="avisoVazio" class="oculto text-center py-16 text-stone-400">
+        <div class="text-5xl mb-3">🔍</div>
+        <p class="font-semibold">Nenhum produto encontrado</p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       VIEW 2 · CHECKOUT
+       ============================================================ -->
+  <section id="view-checkout" class="oculto">
+    <div class="max-w-3xl mx-auto px-4 py-6">
+
+      <button data-voltar="cliente" class="text-sm font-bold text-stone-500 hover:text-ink mb-4 inline-flex items-center gap-1.5">
+        ← Voltar ao cardápio
+      </button>
+
+      <h2 class="text-2xl font-black mb-1">Finalizar pedido</h2>
+      <p class="text-sm text-stone-500 mb-6">Preencha seus dados de entrega e escolha a forma de pagamento.</p>
+
+      <!-- ---- Dados do cliente ---- -->
+      <div class="bg-white rounded-2xl shadow-card p-5 mb-4">
+        <h3 class="font-extrabold text-sm uppercase tracking-wide text-stone-500 mb-4 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 grid place-items-center text-xs">1</span> Seus dados
+        </h3>
+
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="rotulo" for="cliNome">Nome completo *</label>
+            <input id="cliNome" class="campo" placeholder="Ex: Maria Silva" autocomplete="name" />
+          </div>
+          <div>
+            <label class="rotulo" for="cliTelefone">WhatsApp *</label>
+            <input id="cliTelefone" class="campo" placeholder="(11) 99999-9999" inputmode="numeric" autocomplete="tel" />
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-[1fr_110px] gap-4 mt-4">
+          <div>
+            <label class="rotulo" for="cliRua">Rua / Avenida *</label>
+            <input id="cliRua" class="campo" placeholder="Ex: Rua das Flores" autocomplete="address-line1" />
+          </div>
+          <div>
+            <label class="rotulo" for="cliNumero">Número *</label>
+            <input id="cliNumero" class="campo" placeholder="123" autocomplete="address-line2" />
+          </div>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label class="rotulo" for="cliBairro">Bairro *</label>
+            <select id="cliBairro" class="campo"></select>
+          </div>
+          <div>
+            <label class="rotulo" for="cliReferencia">Ponto de referência</label>
+            <input id="cliReferencia" class="campo" placeholder="Ex: perto da padaria" />
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="rotulo" for="cliComplemento">Complemento</label>
+          <input id="cliComplemento" class="campo" placeholder="Apto, bloco, casa dos fundos..." />
+        </div>
+      </div>
+
+      <!-- ---- Pagamento ---- -->
+      <div class="bg-white rounded-2xl shadow-card p-5 mb-4">
+        <h3 class="font-extrabold text-sm uppercase tracking-wide text-stone-500 mb-4 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 grid place-items-center text-xs">2</span> Forma de pagamento
+        </h3>
+
+        <div class="grid sm:grid-cols-3 gap-3" id="grupoPagamento">
+          <label class="pagamento-opcao cursor-pointer">
+            <input type="radio" name="pagamento" value="pix" class="peer sr-only" checked />
+            <div class="rounded-xl border-2 border-stone-200 p-4 h-full transition peer-checked:border-brand-500 peer-checked:bg-brand-50 hover:border-stone-300">
+              <div class="text-2xl mb-1">⚡</div>
+              <p class="font-extrabold text-sm">PIX</p>
+              <p class="text-[11px] text-stone-500 leading-tight mt-0.5">Aprovação imediata com QR Code</p>
+            </div>
+          </label>
+
+          <label class="pagamento-opcao cursor-pointer">
+            <input type="radio" name="pagamento" value="cartao" class="peer sr-only" />
+            <div class="rounded-xl border-2 border-stone-200 p-4 h-full transition peer-checked:border-brand-500 peer-checked:bg-brand-50 hover:border-stone-300">
+              <div class="text-2xl mb-1">💳</div>
+              <p class="font-extrabold text-sm">Cartão na entrega</p>
+              <p class="text-[11px] text-stone-500 leading-tight mt-0.5">Maquininha portátil do entregador</p>
+            </div>
+          </label>
+
+          <label class="pagamento-opcao cursor-pointer">
+            <input type="radio" name="pagamento" value="dinheiro" class="peer sr-only" />
+            <div class="rounded-xl border-2 border-stone-200 p-4 h-full transition peer-checked:border-brand-500 peer-checked:bg-brand-50 hover:border-stone-300">
+              <div class="text-2xl mb-1">💵</div>
+              <p class="font-extrabold text-sm">Dinheiro</p>
+              <p class="text-[11px] text-stone-500 leading-tight mt-0.5">Informe o troco desejado</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Campo de troco (só aparece se dinheiro) -->
+        <div id="blocoTroco" class="oculto mt-4 anim-fade">
+          <label class="rotulo" for="cliTroco">Precisa de troco para quanto?</label>
+          <input id="cliTroco" class="campo" placeholder="Ex: 100,00" inputmode="decimal" />
+          <p class="text-[11px] text-stone-500 mt-1.5">Deixe em branco se não precisar de troco.</p>
+        </div>
+
+        <!-- Aviso cartão -->
+        <div id="blocoCartao" class="oculto mt-4 anim-fade rounded-xl bg-sky-50 border border-sky-200 p-3.5 text-xs text-sky-800">
+          💳 O entregador levará a <strong>maquininha portátil</strong>. Aceitamos débito, crédito e vale-refeição.
+        </div>
+      </div>
+
+      <!-- ---- Resumo ---- -->
+      <div class="bg-white rounded-2xl shadow-card p-5 mb-5">
+        <h3 class="font-extrabold text-sm uppercase tracking-wide text-stone-500 mb-4 flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-brand-100 text-brand-700 grid place-items-center text-xs">3</span> Resumo
+        </h3>
+        <div id="resumoCheckout" class="text-sm space-y-2"></div>
+      </div>
+
+      <button id="btnFinalizar"
+        class="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-base shadow-xl shadow-brand-600/30 transition active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed">
+        Finalizar pedido
+      </button>
+      <p class="text-center text-[11px] text-stone-400 mt-3">
+        Ao finalizar, você será direcionado para a confirmação do pedido.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       VIEW 3 · PAGAMENTO PIX (QR CODE + COPIA E COLA)
+       ============================================================ -->
+  <section id="view-pix" class="oculto">
+    <div class="max-w-lg mx-auto px-4 py-8">
+      <div class="bg-white rounded-3xl shadow-soft p-6 text-center anim-pop">
+
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 grid place-items-center text-white text-2xl shadow-lg shadow-emerald-500/30 mb-4">
+          ⚡
+        </div>
+        <h2 class="text-xl font-black">Pague com PIX</h2>
+        <p class="text-sm text-stone-500 mt-1">Escaneie o QR Code ou use o código Copia e Cola.</p>
+
+        <div id="pixValor" class="mt-4 text-3xl font-black text-brand-600"></div>
+
+        <!-- QR Code -->
+        <div class="mt-5 rounded-2xl border-2 border-dashed border-stone-200 p-4 grid place-items-center bg-stone-50 min-h-[240px]">
+          <div id="pixQrContainer" class="grid place-items-center">
+            <div class="animate-pulse text-stone-400 text-sm">Gerando QR Code...</div>
+          </div>
+        </div>
+
+        <!-- Copia e cola -->
+        <div class="mt-5 text-left">
+          <label class="rotulo">Código Copia e Cola</label>
+          <div class="flex gap-2">
+            <input id="pixCopiaCola" readonly class="campo font-mono text-[11px] bg-stone-50" />
+            <button id="btnCopiarPix"
+              class="shrink-0 px-4 rounded-xl bg-stone-900 hover:bg-ink text-white text-xs font-bold transition active:scale-95">
+              Copiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div id="pixStatus" class="mt-5 rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-800 flex items-center justify-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          Aguardando confirmação do pagamento...
+        </div>
+
+        <div class="mt-5 flex flex-col gap-2">
+          <button id="btnSimularPagamento"
+            class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition active:scale-[.98]">
+            ✅ Já efetuei o pagamento
+          </button>
+          <button data-voltar="checkout" class="w-full py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 text-sm font-bold transition">
+            Voltar e alterar forma de pagamento
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       VIEW 4 · CONFIRMAÇÃO DO PEDIDO
+       ============================================================ -->
+  <section id="view-confirmacao" class="oculto">
+    <div class="max-w-lg mx-auto px-4 py-8">
+      <div class="bg-white rounded-3xl shadow-soft overflow-hidden anim-pop">
+
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white text-center">
+          <div class="w-16 h-16 mx-auto rounded-full bg-white/20 grid place-items-center text-3xl mb-3">✅</div>
+          <h2 class="text-xl font-black">Pedido confirmado!</h2>
+          <p class="text-emerald-50 text-sm mt-1">Seu pedido já está sendo preparado 🍳</p>
+        </div>
+
+        <div class="p-6">
+          <div class="rounded-2xl bg-stone-50 border border-stone-200 p-4 text-center mb-5">
+            <p class="text-[11px] font-bold uppercase tracking-widest text-stone-400">Número do pedido</p>
+            <p id="confNumero" class="text-2xl font-black text-ink mt-0.5">#000</p>
+          </div>
+
+          <div id="confResumo" class="text-sm space-y-1.5 mb-5"></div>
+
+          <div class="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-xs text-emerald-800 mb-5">
+            <strong class="block mb-1">📲 Falta um passo!</strong>
+            Envie o resumo do pedido para o WhatsApp do restaurante para garantir a confirmação.
+          </div>
+
+          <a id="btnWhatsApp" href="#" target="_blank" rel="noopener"
+            class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#25D366] hover:brightness-95 text-white font-extrabold text-base shadow-xl shadow-emerald-500/25 transition active:scale-[.98]">
+            Enviar pedido no WhatsApp
+          </a>
+
+          <button id="btnNovoPedido"
+            class="w-full mt-3 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 text-sm font-bold transition">
+            Fazer outro pedido
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       VIEW 5 · 🆕 HISTÓRICO DE PEDIDOS POR TELEFONE
+       ============================================================ -->
+  <section id="view-historico" class="oculto">
+    <div class="max-w-3xl mx-auto px-4 py-6">
+
+      <button data-voltar="cliente" class="text-sm font-bold text-stone-500 hover:text-ink mb-4 inline-flex items-center gap-1.5">
+        ← Voltar ao cardápio
+      </button>
+
+      <h2 class="text-2xl font-black mb-1 flex items-center gap-2">📦 Meus Pedidos</h2>
+      <p class="text-sm text-stone-500 mb-6">
+        Digite o WhatsApp que você usou ao fazer o pedido para consultar seu histórico.
+      </p>
+
+      <!-- Bloco de busca -->
+      <div class="bg-white rounded-2xl shadow-card p-5 mb-5">
+        <label class="rotulo" for="historicoTelefone">Número do WhatsApp</label>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="historicoTelefone" class="campo" placeholder="(11) 99999-9999" inputmode="numeric" autocomplete="tel" />
+          <button id="btnBuscarHistorico"
+            class="shrink-0 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-sm shadow-lg shadow-brand-600/25 transition active:scale-[.98]">
+            🔍 Buscar
+          </button>
+        </div>
+        <p class="text-[11px] text-stone-400 mt-2">
+          Use o mesmo número informado no checkout para que possamos localizar seus pedidos.
+        </p>
+      </div>
+
+      <!-- Resultado -->
+      <div id="historicoResultado">
+        <div class="rounded-2xl border-2 border-dashed border-stone-200 bg-white/60 p-10 text-center text-stone-400">
+          <div class="text-5xl mb-3">🔎</div>
+          <p class="font-bold text-stone-500">Nenhuma busca ainda</p>
+          <p class="text-xs mt-1">Informe seu número acima para ver seus pedidos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       VIEW 6 · PAINEL DA COZINHA (ADMIN)
+       ============================================================ -->
+  <section id="view-admin" class="oculto">
+
+    <!-- Tela de login -->
+    <div id="adminLogin" class="max-w-sm mx-auto px-4 py-16">
+      <div class="bg-white rounded-3xl shadow-soft p-7 text-center anim-pop">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-ink to-stone-700 grid place-items-center text-white text-2xl mb-4">🔒</div>
+        <h2 class="text-xl font-black">Painel da Cozinha</h2>
+        <p class="text-sm text-stone-500 mt-1 mb-5">Área restrita da equipe.</p>
+
+        <input id="adminSenha" type="password" class="campo text-center tracking-[.3em] font-bold" placeholder="••••" />
+        <p id="adminErro" class="oculto text-xs font-bold text-red-600 mt-2">Senha incorreta. Tente novamente.</p>
+
+        <button id="btnEntrarAdmin"
+          class="w-full mt-4 py-3.5 rounded-xl bg-ink hover:bg-black text-white font-extrabold text-sm transition active:scale-[.98]">
+          Entrar
+        </button>
+        <button data-voltar="cliente" class="w-full mt-3 py-2.5 text-xs font-bold text-stone-400 hover:text-stone-600 transition">
+          ← Voltar ao cardápio
+        </button>
+      </div>
+    </div>
+
+    <!-- Painel -->
+    <div id="adminPainel" class="oculto">
+      <div class="max-w-[1400px] mx-auto px-4 py-6">
+
+        <!-- Barra de controle do painel -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <h2 class="text-2xl font-black">Painel da Cozinha</h2>
+            <p class="text-sm text-stone-500">Acompanhe e avance o status dos pedidos em tempo real.</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="inline-flex items-center gap-2 bg-white rounded-xl px-3 py-2 shadow-card cursor-pointer select-none">
+              <input id="toggleLoja" type="checkbox" class="w-4 h-4 accent-brand-600" checked />
+              <span class="text-xs font-bold text-stone-700">Loja aberta</span>
+            </label>
+            <button id="btnLimparConcluidos"
+              class="text-xs font-bold px-3 py-2 rounded-xl bg-white hover:bg-stone-50 shadow-card text-stone-600 transition">
+              🧹 Limpar concluídos
+            </button>
+            <button id="btnVerCardapio"
+              class="text-xs font-bold px-3 py-2 rounded-xl bg-ink hover:bg-black text-white transition">
+              Ver cardápio
+            </button>
+            <button id="btnSairAdmin"
+              class="text-xs font-bold px-3 py-2 rounded-xl bg-white hover:bg-red-50 shadow-card text-red-600 transition">
+              Sair
+            </button>
+          </div>
+        </div>
+
+        <!-- Métricas rápidas -->
+        <div id="adminMetricas" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"></div>
+
+        <!-- Kanban -->
+        <div id="kanban" class="kanban grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ============================================================
+     BARRA FLUTUANTE DO CARRINHO (mobile)
+     ============================================================ -->
+<div id="barraCarrinho"
+  class="oculto fixed bottom-0 left-0 right-0 z-40 p-3 pb-[max(12px,env(safe-area-inset-bottom))] bg-gradient-to-t from-stone-100 via-stone-100 to-transparent">
+  <button id="btnAbrirCarrinhoBarra"
+    class="w-full max-w-6xl mx-auto flex items-center justify-between gap-3 bg-brand-600 hover:bg-brand-700 text-white px-5 py-4 rounded-2xl shadow-2xl shadow-brand-900/30 transition active:scale-[.99]">
+    <span class="flex items-center gap-3">
+      <span class="relative">
+        🛒
+        <span id="badgeCarrinhoBarra" class="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] px-1 grid place-items-center rounded-full bg-white text-brand-700 text-[10px] font-extrabold">0</span>
+      </span>
+      <span class="font-extrabold text-sm">Ver carrinho</span>
+    </span>
+    <span id="totalCarrinhoBarra" class="font-black text-base">R$ 0,00</span>
+  </button>
+</div>
+
+
+<!-- ============================================================
+     DRAWER DO CARRINHO
+     ============================================================ -->
+<div id="overlayCarrinho" class="oculto fixed inset-0 z-50 bg-black/50 backdrop-blur-sm anim-fade"></div>
+
+<aside id="drawerCarrinho"
+  class="oculto fixed z-50 bg-white flex flex-col
+         inset-x-0 bottom-0 max-h-[88vh] rounded-t-3xl
+         sm:inset-y-0 sm:right-0 sm:left-auto sm:w-[420px] sm:max-h-none sm:rounded-none sm:rounded-l-3xl">
+
+  <!-- Cabeçalho -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-stone-200 shrink-0">
+    <h3 class="font-black text-lg">Seu carrinho</h3>
+    <button id="btnFecharCarrinho" class="w-9 h-9 grid place-items-center rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 transition">✕</button>
+  </div>
+
+  <!-- Itens -->
+  <div id="itensCarrinho" class="flex-1 overflow-y-auto px-5 py-4"></div>
+
+  <!-- Rodapé -->
+  <div id="rodapeCarrinho" class="shrink-0 border-t border-stone-200 px-5 py-4 bg-stone-50 rounded-b-3xl sm:rounded-bl-none sm:rounded-tl-3xl">
+    <div class="space-y-1.5 text-sm mb-4">
+      <div class="flex justify-between text-stone-500"><span>Subtotal</span><span id="carrinhoSubtotal" class="font-semibold text-stone-700">R$ 0,00</span></div>
+      <div class="flex justify-between text-stone-500"><span>Taxa de entrega</span><span id="carrinhoTaxa" class="font-semibold text-stone-700">R$ 0,00</span></div>
+      <div class="flex justify-between pt-2 border-t border-stone-200 mt-2">
+        <span class="font-black text-base">Total</span>
+        <span id="carrinhoTotal" class="font-black text-lg text-brand-600">R$ 0,00</span>
+      </div>
+    </div>
+    <button id="btnIrCheckout"
+      class="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold shadow-lg shadow-brand-600/25 transition active:scale-[.98]">
+      Continuar para entrega
+    </button>
+  </div>
+</aside>
+
+
+<!-- ============================================================
+     MODAL DE DETALHES DO PRODUTO
+     ============================================================ -->
+<div id="overlayProduto" class="oculto fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm anim-fade"></div>
+
+<div id="modalProduto"
+  class="oculto fixed z-[60] bg-white flex flex-col
+         inset-x-0 bottom-0 max-h-[92vh] rounded-t-3xl
+         sm:inset-0 sm:m-auto sm:max-w-lg sm:h-fit sm:rounded-3xl sm:shadow-2xl">
+  <div id="conteudoModalProduto" class="overflow-y-auto"></div>
+</div>
+
+
+<!-- ============================================================
+     TOAST
+     ============================================================ -->
+<div id="toast"
+  class="oculto fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-8 z-[70] px-5 py-3 rounded-2xl bg-ink text-white text-sm font-bold shadow-2xl anim-up whitespace-nowrap">
+</div>
+
+
+<script>
+/* ============================================================================
+ *  SABOR DA TIA · CARDÁPIO DIGITAL
+ *  ---------------------------------------------------------------------------
+ *  Arquitetura (JS Vanilla ES6+):
+ *    1) CONFIG          → constantes do restaurante, entrega e Mercado Pago
+ *    2) DADOS           → catálogo de produtos e categorias
+ *    3) ESTADO          → store central + persistência em localStorage
+ *    4) UTILITÁRIOS     → helpers (formatação, toast, máscaras, QR/EMV)
+ *    5) CLIENTE         → render do cardápio, modal de produto, carrinho
+ *    6) CHECKOUT        → formulário, frete por bairro, validação
+ *    7) PAGAMENTO       → PIX Mercado Pago (API) + fallback simulado
+ *    8) CONFIRMAÇÃO     → resumo + deep link do WhatsApp
+ *    9) ADMIN/COZINHA   → login, kanban e avanço de status
+ *   10) HISTÓRICO       → 🆕 busca de pedidos por telefone (WhatsApp)
+ *   11) BOOTSTRAP       → inicialização e sincronização entre abas
+ * ========================================================================== */
+
+
+/* ============================================================================
+ * 1) CONFIGURAÇÕES  —  ⚠️ EDITE AQUI OS DADOS DO RESTAURANTE
+ * ========================================================================== */
+const CONFIG = {
+  restaurante: {
+    nome: 'Sabor da Tia',
+    slogan: 'Comida caseira feita com amor',
+    /* ⚠️ WhatsApp no formato internacional: DDI + DDD + número (só dígitos) */
+    whatsapp: '5511999999999',
+    /* Chave PIX usada no fallback (modo simulação) */
+    pixChave: 'sabordatia@exemplo.com.br',
+    nomeTitularPix: 'MARIA DA SILVA',
+    cidadePix: 'SAO PAULO',
+    /* Status da loja — também controlado pelo painel da cozinha */
+    aberto: true
+  },
+
+  entrega: {
+    /* Taxa padrão quando o bairro não estiver na lista */
+    taxaPadrao: 8.00,
+    /* Taxa fixa por bairro (edite os bairros conforme sua região) */
+    bairros: {
+      'Centro':            5.00,
+      'Jardim América':    7.00,
+      'Vila Nova':         7.00,
+      'Santa Cecília':     9.00,
+      'Parque Industrial': 12.00,
+      'Retirada no local': 0.00
+    },
+    pedidoMinimo: 15.00
+  },
+
+  /* ------------------------------------------------------------------------
+   * MERCADO PAGO  (conta PJ)
+   * ------------------------------------------------------------------------
+   * FLUXO DO PIX:
+   *   1. O front monta o payload e chama POST /v1/payments com o Bearer Token
+   *      da conta PJ.
+   *   2. O MP responde com `point_of_interaction.transaction_data`, que contém:
+   *        • qr_code       → string "Copia e Cola" (EMV)
+   *        • qr_code_base64→ imagem PNG do QR em base64
+   *   3. Exibimos o QR e fazemos polling em GET /v1/payments/{id} até
+   *      status === 'approved'.
+   *
+   * ⚠️ IMPORTANTE SOBRE CORS:
+   *   A API do Mercado Pago NÃO libera CORS para chamadas diretas do navegador.
+   *   Em produção, use SEMPRE um backend/proxy (serverless, Node, PHP, etc.)
+   *   que guarda o ACCESS TOKEN em segredo e repassa a requisição.
+   *
+   *   Exemplo mínimo de backend (Node + Express):
+   *   -------------------------------------------------------------------
+   *   app.post('/api/pix', async (req, res) => {
+   *     const r = await fetch('https://api.mercadopago.com/v1/payments', {
+   *       method: 'POST',
+   *       headers: {
+   *         'Content-Type': 'application/json',
+   *         'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+   *         'X-Idempotency-Key': req.body.idempotencyKey
+   *       },
+   *       body: JSON.stringify(req.body.payment)
+   *     });
+   *     res.status(r.status).json(await r.json());
+   *   });
+   *   -------------------------------------------------------------------
+   * ---------------------------------------------------------------------- */
+  mercadoPago: {
+    /* ⚠️ COLE AQUI O ACCESS TOKEN DE PRODUÇÃO DA CONTA PJ (apenas em dev local) */
+    accessToken: 'SEU_ACCESS_TOKEN_MERCADO_PAGO_PJ',
+    /* ✅ RECOMENDADO: URL do seu backend/proxy. Se preenchido, tem prioridade. */
+    backendProxy: '',            // ex: 'https://seu-backend.com/api/pix'
+    /* URL pública para o MP avisar sobre mudanças de status (webhook) */
+    webhookUrl: '',              // ex: 'https://seu-backend.com/api/webhook'
+    /* true  → não chama a API real, gera um PIX simulado localmente
+       false → tenta chamar o Mercado Pago (via proxy ou direto)             */
+    simulacao: true,
+    /* Intervalo de checagem do status do pagamento (ms) */
+    intervaloPolling: 5000
+  },
+
+  admin: {
+    /* Senha de acesso ao painel da cozinha (troque antes de publicar!) */
+    senha: '1234'
+  }
+};
+
+
+/* ============================================================================
+ * 2) DADOS  —  CATEGORIAS E PRODUTOS
+ * ========================================================================== */
+const CATEGORIAS = [
+  { id: 'todos',      nome: 'Todos',        icone: '🍽️' },
+  { id: 'pratos',     nome: 'Pratos Feitos',icone: '🍛' },
+  { id: 'porcoes',    nome: 'Porções',      icone: '🍟' },
+  { id: 'bebidas',    nome: 'Bebidas',      icone: '🥤' },
+  { id: 'sobremesas', nome: 'Sobremesas',   icone: '🍮' }
+];
+
+const IMG = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&q=70`;
+
+const PRODUTOS = [
+  /* ---- Pratos Feitos ---- */
+  { id:'p01', categoria:'pratos', nome:'Feijoada da Tia', preco:34.90, destaque:true,
+    desc:'Feijoada completa com arroz, couve, farofa e laranja.',
+    img: IMG('photo-1546069901-ba9599a7e63c') },
+
+  { id:'p02', categoria:'pratos', nome:'Prato Feito Completo', preco:28.90,
+    desc:'Arroz, feijão, bife acebolado, ovo e salada da casa.',
+    img: IMG('photo-1600891964092-4316c288032e') },
+
+  { id:'p03', categoria:'pratos', nome:'Frango Grelhado', preco:26.90,
+    desc:'Filé de frango grelhado, arroz, purê e legumes.',
+    img: IMG('photo-1598103442097-8b74394b95c6') },
+
+  { id:'p04', categoria:'pratos', nome:'Filé à Parmegiana', preco:39.90, destaque:true,
+    desc:'Filé empanado, molho de tomate artesanal e queijo gratinado.',
+    img: IMG('photo-1632778149955-e80f8ceca2e8') },
+
+  { id:'p05', categoria:'pratos', nome:'Strogonoff de Frango', preco:29.90,
+    desc:'Cremoso, com arroz e batata palha crocante.',
+    img: IMG('photo-1588166524941-3bf61a9c41db') },
+
+  /* ---- Porções ---- */
+  { id:'p06', categoria:'porcoes', nome:'Batata Frita', preco:22.90, destaque:true,
+    desc:'Porção generosa, crocante por fora e macia por dentro.',
+    img: IMG('photo-1573080496219-bb080dd4f877') },
+
+  { id:'p07', categoria:'porcoes', nome:'Calabresa Acebolada', preco:27.90,
+    desc:'Calabresa fatiada na chapa com cebola e pão.',
+    img: IMG('photo-1626082927389-6cd097cdc6ec') },
+
+  { id:'p08', categoria:'porcoes', nome:'Frango a Passarinho', preco:31.90,
+    desc:'Meio quilo de frango temperado, com alho e limão.',
+    img: IMG('photo-1562967914-608f82629710') },
+
+  { id:'p09', categoria:'porcoes', nome:'Polenta Frita', preco:19.90,
+    desc:'Bastões de polenta dourados, servidos com molho.',
+    img: IMG('photo-1541592106381-b31e9677c0e5') },
+
+  /* ---- Bebidas ---- */
+  { id:'p10', categoria:'bebidas', nome:'Coca-Cola 350ml', preco:6.50,
+    desc:'Lata gelada de 350ml.', img: IMG('photo-1554866585-cd94860890b7') },
+
+  { id:'p11', categoria:'bebidas', nome:'Suco de Laranja 500ml', preco:9.90,
+    desc:'Natural, feito na hora.', img: IMG('photo-1600271886742-f049cd451bba') },
+
+  { id:'p12', categoria:'bebidas', nome:'Cerveja Long Neck', preco:8.90,
+    desc:'Puro malte, 355ml, bem gelada.', img: IMG('photo-1608270586620-248524c67de9') },
+
+  { id:'p13', categoria:'bebidas', nome:'Água Mineral 500ml', preco:4.00,
+    desc:'Com ou sem gás.', img: IMG('photo-1523362628745-0c100150b504') },
+
+  /* ---- Sobremesas ---- */
+  { id:'p14', categoria:'sobremesas', nome:'Pudim de Leite', preco:12.90, destaque:true,
+    desc:'Receita tradicional da família, com calda de caramelo.',
+    img: IMG('photo-1551024506-0bccd828d307') },
+
+  { id:'p15', categoria:'sobremesas', nome:'Petit Gateau', preco:18.90,
+    desc:'Bolo quente de chocolate com recheio cremoso.',
+    img: IMG('photo-1606313564200-e75d5e30476c') },
+
+  { id:'p16', categoria:'sobremesas', nome:'Açaí 300ml', preco:16.90,
+    desc:'Com granola, banana e leite condensado.',
+    img: IMG('photo-1590301157890-4810ed352733') }
+];
+
+
+/* ============================================================================
+ * 3) ESTADO GLOBAL + PERSISTÊNCIA (localStorage)
+ * ========================================================================== */
+const CHAVES = {
+  carrinho: 'sabordatia:carrinho:v1',
+  pedidos:  'sabordatia:pedidos:v1',
+  seq:      'sabordatia:sequencia:v1',
+  sessao:   'sabordatia:admin:sessao'
+};
+
+const estado = {
+  carrinho: [],          // [{ linhaId, produtoId, nome, preco, qtd, obs, img }]
+  pedidos: [],           // [{ id, numero, cliente, itens, valores, pagamento, status, criadoEm }]
+  sequencia: 1,          // próximo número de pedido
+  categoriaAtiva: 'todos',
+  busca: '',
+  produtoModal: null,    // { produtoId, qtd, obs }
+  pedidoAtual: null,     // pedido em processo de checkout
+  pix: null,             // { paymentId, copiaECola, qrBase64, pollTimer }
+  adminLogado: false,
+  historicoTelefone: ''  // 🆕 último telefone buscado no histórico
+};
+
+/** Carrega os dados persistidos do navegador. */
+function carregarEstado() {
+  try {
+    estado.carrinho  = JSON.parse(localStorage.getItem(CHAVES.carrinho) || '[]');
+    estado.pedidos   = JSON.parse(localStorage.getItem(CHAVES.pedidos)  || '[]');
+    estado.sequencia = Number(localStorage.getItem(CHAVES.seq) || 1);
+    const lojaAberta = localStorage.getItem('sabordatia:loja');
+    if (lojaAberta !== null) CONFIG.restaurante.aberto = lojaAberta === 'true';
+  } catch (e) {
+    console.warn('[Sabor da Tia] Falha ao carregar estado:', e);
+  }
+}
+
+/** Persiste o carrinho. */
+function salvarCarrinho() {
+  localStorage.setItem(CHAVES.carrinho, JSON.stringify(estado.carrinho));
+}
+/** Persiste os pedidos e o contador de sequência. */
+function salvarPedidos() {
+  localStorage.setItem(CHAVES.pedidos, JSON.stringify(estado.pedidos));
+  localStorage.setItem(CHAVES.seq, String(estado.sequencia));
+}
+
+
+/* ============================================================================
+ * 4) UTILITÁRIOS
+ * ========================================================================== */
+const $  = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+/** Formata número como moeda brasileira. */
+const money = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/** Gera um ID único. */
+const uid = () => (window.crypto?.randomUUID
+  ? crypto.randomUUID()
+  : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+
+/** Escapa HTML para evitar injeção em campos digitados pelo usuário. */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g,
+  (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+/** Formata data/hora curta. */
+const hora = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+/** 🆕 Formata data + hora completas (para o histórico). */
+const dataHoraCompleta = (iso) => new Date(iso).toLocaleString('pt-BR', {
+  day: '2-digit', month: '2-digit', year: 'numeric',
+  hour: '2-digit', minute: '2-digit'
+});
+
+/** Toast de feedback rápido. */
+let toastTimer = null;
+function toast(mensagem, duracao = 2200) {
+  const el = $('#toast');
+  el.textContent = mensagem;
+  el.classList.remove('oculto');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('oculto'), duracao);
+}
+
+/** Máscara de telefone brasileiro: (99) 99999-9999 */
+function mascaraTelefone(valor) {
+  const d = String(valor).replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+/** Converte "100,50" ou "100.50" em número. */
+function paraNumero(valor) {
+  if (valor === null || valor === undefined) return 0;
+  const limpo = String(valor).replace(/[^\d,.-]/g, '').replace(',', '.');
+  const n = parseFloat(limpo);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Define qual tela principal está visível. */
+function mostrarView(nome) {
+  /* 🆕 'historico' incluído na lista de views controladas */
+  ['cliente', 'checkout', 'pix', 'confirmacao', 'historico', 'admin'].forEach((v) => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.classList.toggle('oculto', v !== nome);
+  });
+  window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  atualizarHeader();
+}
+
+/* ---------- Geração de PIX "Copia e Cola" (padrão EMV / BR Code) ---------- */
+/** Monta um campo EMV: ID + tamanho (2 dígitos) + valor. */
+function emv(id, valor) {
+  const v = String(valor);
+  return `${id}${String(v.length).padStart(2, '0')}${v}`;
+}
+
+/** CRC16-CCITT (0x1021) — obrigatório no BR Code. */
+function crc16(payload) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xFFFF;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+/**
+ * Gera o payload PIX estático (Copia e Cola) — usado no modo SIMULAÇÃO.
+ * Em produção, quem gera esse código é o Mercado Pago (qr_code no response).
+ */
+function gerarPixCopiaECola({ chave, nome, cidade, valor, txid = '***' }) {
+  const merchantAccount =
+    emv('26', emv('00', 'BR.GOV.BCB.PIX') + emv('01', chave));
+
+  const payload =
+    emv('00', '01') +
+    merchantAccount +
+    emv('52', '0000') +
+    emv('53', '986') +                       // 986 = BRL
+    emv('54', Number(valor).toFixed(2)) +
+    emv('58', 'BR') +
+    emv('59', nome.substring(0, 25)) +
+    emv('60', cidade.substring(0, 15)) +
+    emv('62', emv('05', txid)) +
+    '6304';
+
+  return payload + crc16(payload);
+}
+
+/** Gera uma imagem de QR Code (usada apenas no modo simulação). */
+function urlQrCode(texto) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=0&data=${encodeURIComponent(texto)}`;
+}
+
+
+/* ============================================================================
+ * 5) CLIENTE — CARDÁPIO, PRODUTO E CARRINHO
+ * ========================================================================== */
+
+/* ---------- 5.1 Render: chips de categoria ---------- */
+function renderCategorias() {
+  const alvo = $('#listaCategorias');
+  alvo.innerHTML = CATEGORIAS.map((c) => {
+    const ativa = estado.categoriaAtiva === c.id;
+    return `
+      <button data-categoria="${c.id}"
+        class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition active:scale-95
+               ${ativa
+                 ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/25'
+                 : 'bg-white text-stone-600 hover:bg-stone-50 shadow-card'}">
+        <span>${c.icone}</span> ${c.nome}
+      </button>`;
+  }).join('');
+}
+
+/* ---------- 5.2 Render: grade de produtos ---------- */
+function renderProdutos() {
+  const termo = estado.busca.trim().toLowerCase();
+
+  const lista = PRODUTOS.filter((p) => {
+    const okCategoria = estado.categoriaAtiva === 'todos' || p.categoria === estado.categoriaAtiva;
+    const okBusca = !termo
+      || p.nome.toLowerCase().includes(termo)
+      || p.desc.toLowerCase().includes(termo);
+    return okCategoria && okBusca;
+  });
+
+  $('#avisoVazio').classList.toggle('oculto', lista.length > 0);
+
+  $('#gradeProdutos').innerHTML = lista.map((p) => `
+    <article data-produto="${p.id}"
+      class="group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-soft transition cursor-pointer flex flex-col active:scale-[.98]">
+
+      <div class="relative aspect-[4/3] overflow-hidden bg-stone-100">
+        <img src="${p.img}" alt="${esc(p.nome)}" loading="lazy"
+             onerror="this.onerror=null;this.src='https://placehold.co/600x450/f5f5f4/a8a29e?text=Sem+Foto'"
+             class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+        ${p.destaque ? `
+          <span class="absolute top-2 left-2 text-[10px] font-extrabold uppercase tracking-wide px-2 py-1 rounded-full bg-brand-600 text-white shadow">
+            🔥 Destaque
+          </span>` : ''}
+      </div>
+
+      <div class="p-3 flex flex-col flex-1">
+        <h3 class="font-bold text-[13px] sm:text-sm leading-snug text-ink">${esc(p.nome)}</h3>
+        <p class="text-[11px] text-stone-500 leading-snug mt-1 line-clamp-2 flex-1">${esc(p.desc)}</p>
+
+        <div class="flex items-center justify-between gap-2 mt-3">
+          <span class="font-black text-brand-600 text-sm sm:text-base">${money(p.preco)}</span>
+          <button data-adicionar="${p.id}"
+            class="w-9 h-9 shrink-0 grid place-items-center rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-black text-lg shadow-md shadow-brand-600/25 transition active:scale-90">
+            +
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join('');
+}
+
+/* ---------- 5.3 Modal de detalhes do produto ---------- */
+function abrirModalProduto(produtoId) {
+  const produto = PRODUTOS.find((p) => p.id === produtoId);
+  if (!produto) return;
+
+  estado.produtoModal = { produtoId, qtd: 1, obs: '' };
+
+  $('#conteudoModalProduto').innerHTML = `
+    <div class="relative h-48 sm:h-56 bg-stone-100 shrink-0">
+      <img src="${produto.img}" alt="${esc(produto.nome)}"
+           onerror="this.onerror=null;this.src='https://placehold.co/800x450/f5f5f4/a8a29e?text=Sem+Foto'"
+           class="w-full h-full object-cover sm:rounded-t-3xl" />
+      <button data-fechar-produto
+        class="absolute top-3 right-3 w-9 h-9 grid place-items-center rounded-full bg-white/95 hover:bg-white text-stone-700 shadow-lg transition">✕</button>
+    </div>
+
+    <div class="p-5">
+      <h3 class="text-xl font-black">${esc(produto.nome)}</h3>
+      <p class="text-sm text-stone-500 mt-1.5 leading-relaxed">${esc(produto.desc)}</p>
+      <p class="text-2xl font-black text-brand-600 mt-3">${money(produto.preco)}</p>
+
+      <div class="mt-5">
+        <label class="rotulo" for="obsProduto">Observações</label>
+        <textarea id="obsProduto" rows="2" class="campo resize-none"
+          placeholder="Ex: sem cebola, ponto da carne bem passado, molho à parte..."></textarea>
+        <p class="text-[11px] text-stone-400 mt-1.5">Opcional — a cozinha vai ler este recado.</p>
+      </div>
+
+      <div class="flex items-center gap-3 mt-5">
+        <div class="flex items-center gap-1 bg-stone-100 rounded-xl p-1">
+          <button data-qtd="-1" class="w-10 h-10 grid place-items-center rounded-lg bg-white shadow-sm font-black text-lg hover:bg-stone-50 transition active:scale-90">−</button>
+          <span id="qtdModal" class="w-10 text-center font-black text-lg">1</span>
+          <button data-qtd="1" class="w-10 h-10 grid place-items-center rounded-lg bg-white shadow-sm font-black text-lg hover:bg-stone-50 transition active:scale-90">+</button>
+        </div>
+
+        <button id="btnAddModal"
+          class="flex-1 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-extrabold text-sm shadow-lg shadow-brand-600/25 transition active:scale-[.98]">
+          Adicionar · <span id="precoModal">${money(produto.preco)}</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  $('#overlayProduto').classList.remove('oculto');
+  $('#modalProduto').classList.remove('oculto');
+  $('#modalProduto').classList.add('anim-up');
+  document.body.style.overflow = 'hidden';
+
+  const obs = $('#obsProduto');
+  obs.value = '';
+  obs.addEventListener('input', () => { if (estado.produtoModal) estado.produtoModal.obs = obs.value; });
+
+  atualizarPrecoModal();
+}
+
+function atualizarPrecoModal() {
+  const m = estado.produtoModal;
+  if (!m) return;
+  const produto = PRODUTOS.find((p) => p.id === m.produtoId);
+  if (!produto) return;
+  $('#qtdModal').textContent = m.qtd;
+  $('#precoModal').textContent = money(produto.preco * m.qtd);
+}
+
+function fecharModalProduto() {
+  $('#overlayProduto').classList.add('oculto');
+  $('#modalProduto').classList.add('oculto');
+  document.body.style.overflow = '';
+  estado.produtoModal = null;
+}
+
+/* ---------- 5.4 Carrinho: adicionar, alterar, remover ---------- */
+function adicionarAoCarrinho(produtoId, qtd = 1, obs = '') {
+  if (!CONFIG.restaurante.aberto) {
+    toast('😴 A loja está fechada no momento');
+    return;
+  }
+
+  const produto = PRODUTOS.find((p) => p.id === produtoId);
+  if (!produto) return;
+
+  const obsLimpa = obs.trim();
+  const linhaId = `${produtoId}::${obsLimpa.toLowerCase()}`;
+  const existente = estado.carrinho.find((i) => i.linhaId === linhaId);
+
+  if (existente) {
+    existente.qtd += qtd;
+  } else {
+    estado.carrinho.push({
+      linhaId,
+      produtoId,
+      nome: produto.nome,
+      preco: produto.preco,
+      img: produto.img,
+      qtd,
+      obs: obsLimpa
+    });
+  }
+
+  salvarCarrinho();
+  atualizarCarrinhoUI();
+  toast(`✅ ${produto.nome} adicionado`);
+}
+
+function alterarQtd(linhaId, delta) {
+  const item = estado.carrinho.find((i) => i.linhaId === linhaId);
+  if (!item) return;
+  item.qtd += delta;
+  if (item.qtd <= 0) {
+    estado.carrinho = estado.carrinho.filter((i) => i.linhaId !== linhaId);
+  }
+  salvarCarrinho();
+  atualizarCarrinhoUI();
+}
+
+function removerItem(linhaId) {
+  estado.carrinho = estado.carrinho.filter((i) => i.linhaId !== linhaId);
+  salvarCarrinho();
+  atualizarCarrinhoUI();
+  toast('Item removido');
+}
+
+/* ---------- 5.5 Cálculos do carrinho ---------- */
+const subtotalCarrinho = () =>
+  estado.carrinho.reduce((soma, i) => soma + i.preco * i.qtd, 0);
+
+const totalItens = () =>
+  estado.carrinho.reduce((soma, i) => soma + i.qtd, 0);
+
+/** Taxa de entrega a partir do bairro (0 se o carrinho estiver vazio). */
+function taxaPorBairro(bairro) {
+  if (!bairro) return 0;
+  const t = CONFIG.entrega.bairros[bairro];
+  return t !== undefined ? t : CONFIG.entrega.taxaPadrao;
+}
+
+/* ---------- 5.6 Render do carrinho (drawer) ---------- */
+function renderItensCarrinho() {
+  const container = $('#itensCarrinho');
+
+  if (estado.carrinho.length === 0) {
+    container.innerHTML = `
+      <div class="h-full grid place-items-center text-center py-16">
+        <div>
+          <div class="text-5xl mb-3">🛒</div>
+          <p class="font-bold text-stone-500">Seu carrinho está vazio</p>
+          <p class="text-xs text-stone-400 mt-1">Adicione itens do cardápio para continuar.</p>
+        </div>
+      </div>`;
+    $('#rodapeCarrinho').classList.add('opacity-50', 'pointer-events-none');
+    return;
+  }
+  $('#rodapeCarrinho').classList.remove('opacity-50', 'pointer-events-none');
+
+  container.innerHTML = estado.carrinho.map((item) => `
+    <div class="flex gap-3 py-3.5 border-b border-stone-100 last:border-0">
+      <img src="${item.img}" alt="${esc(item.nome)}"
+           onerror="this.onerror=null;this.src='https://placehold.co/120x120/f5f5f4/a8a29e?text=+'""
+           class="w-14 h-14 rounded-xl object-cover bg-stone-100 shrink-0" />
+
+      <div class="flex-1 min-w-0">
+        <div class="flex items-start justify-between gap-2">
+          <h4 class="font-bold text-sm leading-snug">${esc(item.nome)}</h4>
+          <button data-remover="${item.linhaId}" class="text-stone-300 hover:text-red-500 transition shrink-0 text-lg leading-none">🗑</button>
+        </div>
+
+        ${item.obs ? `<p class="text-[11px] text-amber-700 bg-amber-50 rounded-md px-2 py-1 mt-1 inline-block">📝 ${esc(item.obs)}</p>` : ''}
+
+        <div class="flex items-center justify-between mt-2">
+          <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-0.5">
+            <button data-qtd="-1" data-linha="${item.linhaId}"
+              class="w-7 h-7 grid place-items-center rounded-md bg-white shadow-sm font-black hover:bg-stone-50 transition">−</button>
+            <span class="w-7 text-center font-bold text-sm">${item.qtd}</span>
+            <button data-qtd="1" data-linha="${item.linhaId}"
+              class="w-7 h-7 grid place-items-center rounded-md bg-white shadow-sm font-black hover:bg-stone-50 transition">+</button>
+          </div>
+          <span class="font-black text-sm text-brand-600">${money(item.preco * item.qtd)}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/** Atualiza badges, totais e barra flutuante. */
+function atualizarCarrinhoUI() {
+  const qtd = totalItens();
+  const subtotal = subtotalCarrinho();
+
+  $('#badgeCarrinhoTopo').textContent = qtd;
+  $('#badgeCarrinhoBarra').textContent = qtd;
+  $('#totalCarrinhoBarra').textContent = money(subtotal);
+
+  $('#barraCarrinho').classList.toggle('oculto', qtd === 0);
+  $('#badgeCarrinhoTopo').classList.toggle('oculto', qtd === 0);
+
+  $('#carrinhoSubtotal').textContent = money(subtotal);
+  $('#carrinhoTaxa').textContent = money(taxaPorBairro($('#cliBairro')?.value));
+  $('#carrinhoTotal').textContent = money(subtotal + taxaPorBairro($('#cliBairro')?.value));
+
+  renderItensCarrinho();
+}
+
+function abrirCarrinho() {
+  $('#overlayCarrinho').classList.remove('oculto');
+  $('#drawerCarrinho').classList.remove('oculto');
+  $('#drawerCarrinho').classList.add('anim-up', 'sm:anim-right');
+  document.body.style.overflow = 'hidden';
+  atualizarCarrinhoUI();
+}
+
+function fecharCarrinho() {
+  $('#overlayCarrinho').classList.add('oculto');
+  $('#drawerCarrinho').classList.add('oculto');
+  $('#drawerCarrinho').classList.remove('anim-up', 'sm:anim-right');
+  document.body.style.overflow = '';
+}
+
+
+/* ============================================================================
+ * 6) CHECKOUT
+ * ========================================================================== */
+
+/** Preenche o <select> de bairros a partir da CONFIG. */
+function renderBairros() {
+  const select = $('#cliBairro');
+  select.innerHTML = '<option value="">Selecione seu bairro…</option>' +
+    Object.entries(CONFIG.entrega.bairros).map(([bairro, taxa]) =>
+      `<option value="${esc(bairro)}">${esc(bairro)} — ${taxa === 0 ? 'Retirada' : money(taxa)}</option>`
+    ).join('');
+}
+
+/** Renderiza o resumo lateral do checkout. */
+function renderResumoCheckout() {
+  const subtotal = subtotalCarrinho();
+  const bairro = $('#cliBairro')?.value || '';
+  const taxa = taxaPorBairro(bairro);
+  const total = subtotal + taxa;
+
+  $('#resumoCheckout').innerHTML = `
+    ${estado.carrinho.map((i) => `
+      <div class="flex justify-between gap-3">
+        <span class="text-stone-600 truncate">
+          <strong class="text-ink">${i.qtd}x</strong> ${esc(i.nome)}
+          ${i.obs ? `<em class="block text-[11px] text-amber-700 not-italic">↳ ${esc(i.obs)}</em>` : ''}
+        </span>
+        <span class="font-semibold whitespace-nowrap">${money(i.preco * i.qtd)}</span>
+      </div>`).join('')}
+
+    <div class="border-t border-stone-200 pt-3 mt-3 space-y-1.5">
+      <div class="flex justify-between text-stone-500"><span>Subtotal</span><span class="font-semibold text-stone-700">${money(subtotal)}</span></div>
+      <div class="flex justify-between text-stone-500">
+        <span>Taxa de entrega ${bairro ? `<span class="text-[11px]">(${esc(bairro)})</span>` : ''}</span>
+        <span class="font-semibold text-stone-700">${bairro ? money(taxa) : '—'}</span>
+      </div>
+      <div class="flex justify-between pt-2 border-t border-stone-200 mt-2">
+        <span class="font-black text-base">Total</span>
+        <span class="font-black text-lg text-brand-600">${money(total)}</span>
+      </div>
+    </div>
+  `;
+}
+
+/** Abre a tela de checkout. */
+function irParaCheckout() {
+  if (estado.carrinho.length === 0) {
+    toast('Seu carrinho está vazio');
+    return;
+  }
+  if (subtotalCarrinho() < CONFIG.entrega.pedidoMinimo) {
+    toast(`Pedido mínimo de ${money(CONFIG.entrega.pedidoMinimo)}`);
+    return;
+  }
+  fecharCarrinho();
+  mostrarView('checkout');
+  renderResumoCheckout();
+}
+
+/** Valida os campos obrigatórios do checkout. */
+function validarCheckout() {
+  const obrigatorios = [
+    ['#cliNome', 'Informe seu nome'],
+    ['#cliTelefone', 'Informe seu WhatsApp'],
+    ['#cliRua', 'Informe a rua'],
+    ['#cliNumero', 'Informe o número'],
+    ['#cliBairro', 'Selecione o bairro']
+  ];
+
+  for (const [seletor, mensagem] of obrigatorios) {
+    const el = $(seletor);
+    if (!el.value.trim()) {
+      toast('⚠️ ' + mensagem);
+      el.focus();
+      el.classList.add('ring-2', 'ring-red-400');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-red-400'), 2000);
+      return false;
+    }
+  }
+
+  const telefoneDigitos = $('#cliTelefone').value.replace(/\D/g, '');
+  if (telefoneDigitos.length < 10) {
+    toast('⚠️ WhatsApp inválido');
+    $('#cliTelefone').focus();
+    return false;
+  }
+
+  return true;
+}
+
+/** Lê o formulário e monta o objeto do pedido. */
+function montarPedido() {
+  const bairro = $('#cliBairro').value;
+  const pagamento = document.querySelector('input[name="pagamento"]:checked')?.value || 'dinheiro';
+  const subtotal = subtotalCarrinho();
+  const taxa = taxaPorBairro(bairro);
+
+  const numero = estado.sequencia;
+
+  return {
+    id: uid(),
+    numero,
+    criadoEm: new Date().toISOString(),
+    status: 'novo',
+
+    cliente: {
+      nome: $('#cliNome').value.trim(),
+      telefone: $('#cliTelefone').value.trim(),
+      rua: $('#cliRua').value.trim(),
+      numero: $('#cliNumero').value.trim(),
+      bairro,
+      complemento: $('#cliComplemento').value.trim(),
+      referencia: $('#cliReferencia').value.trim()
+    },
+
+    itens: estado.carrinho.map((i) => ({ ...i })),
+
+    valores: { subtotal, taxa, total: subtotal + taxa },
+
+    pagamento: {
+      tipo: pagamento,                                  // 'pix' | 'cartao' | 'dinheiro'
+      trocoPara: pagamento === 'dinheiro' ? paraNumero($('#cliTroco').value) : 0,
+      status: pagamento === 'pix' ? 'pendente' : 'na_entrega',
+      pixId: null
+    }
+  };
+}
+
+
+/* ============================================================================
+ * 7) PAGAMENTO — MERCADO PAGO (PIX)
+ * ========================================================================== */
+
+/**
+ * Cria um pagamento PIX no Mercado Pago.
+ *
+ * Endpoint: POST https://api.mercadopago.com/v1/payments
+ * Header:   Authorization: Bearer <ACCESS_TOKEN_DA_CONTA_PJ>
+ *
+ * Payload mínimo para PIX:
+ * {
+ *   "transaction_amount": 78.80,
+ *   "description": "Pedido #012 - Sabor da Tia",
+ *   "payment_method_id": "pix",
+ *   "external_reference": "<id-interno-do-pedido>",
+ *   "notification_url": "https://seu-backend/webhook",
+ *   "payer": { "email": "...", "first_name": "...", "last_name": "...",
+ *              "identification": { "type": "CPF", "number": "..." } }
+ * }
+ *
+ * Resposta relevante:
+ *   data.point_of_interaction.transaction_data.qr_code        → Copia e Cola
+ *   data.point_of_interaction.transaction_data.qr_code_base64 → PNG base64
+ *   data.id                                                   → ID do pagamento
+ *   data.status                                               → 'pending' | 'approved' | ...
+ */
+async function criarPagamentoPix(pedido) {
+  const { mercadoPago, restaurante } = CONFIG;
+
+  /* ---------- MODO SIMULAÇÃO (sem chamar a API) ---------- */
+  if (mercadoPago.simulacao) {
+    const copiaECola = gerarPixCopiaECola({
+      chave: restaurante.pixChave,
+      nome: restaurante.nomeTitularPix,
+      cidade: restaurante.cidadePix,
+      valor: pedido.valores.total,
+      txid: 'PED' + String(pedido.numero).padStart(4, '0')
+    });
+
+    return {
+      simulado: true,
+      paymentId: 'SIMULADO-' + pedido.numero,
+      status: 'pending',
+      copiaECola,
+      qrBase64: null,
+      qrUrl: urlQrCode(copiaECola)
+    };
+  }
+
+  /* ---------- MODO REAL ---------- */
+  const payload = {
+    transaction_amount: Number(pedido.valores.total.toFixed(2)),
+    description: `Pedido #${String(pedido.numero).padStart(3, '0')} — ${restaurante.nome}`,
+    payment_method_id: 'pix',
+    external_reference: pedido.id,
+    notification_url: mercadoPago.webhookUrl || undefined,
+    payer: {
+      email: `${pedido.cliente.telefone.replace(/\D/g, '')}@cliente.${restaurante.nome.toLowerCase().replace(/\s+/g, '')}.com`,
+      first_name: pedido.cliente.nome.split(' ')[0],
+      last_name: pedido.cliente.nome.split(' ').slice(1).join(' ') || 'Cliente'
+    }
+  };
+
+  /* Se houver backend/proxy configurado, ele cuida do Bearer Token.
+     Caso contrário, tentamos a chamada direta (funciona apenas em ambiente
+     controlado — o navegador costuma bloquear por CORS).                   */
+  const url = mercadoPago.backendProxy || 'https://api.mercadopago.com/v1/payments';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Idempotency-Key': pedido.id          // evita cobranças duplicadas
+  };
+  if (!mercadoPago.backendProxy) {
+    headers['Authorization'] = `Bearer ${mercadoPago.accessToken}`;
+  }
+
+  const resposta = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  const dados = await resposta.json();
+
+  if (!resposta.ok) {
+    console.error('[Mercado Pago] Erro ao criar pagamento:', dados);
+    throw new Error(dados.message || 'Falha ao gerar o PIX. Tente novamente.');
+  }
+
+  /* Extrai os dados do QR Code do PIX */
+  const tx = dados.point_of_interaction?.transaction_data || {};
+
+  return {
+    simulado: false,
+    paymentId: String(dados.id),
+    status: dados.status,
+    copiaECola: tx.qr_code || '',
+    qrBase64: tx.qr_code_base64 || null,
+    qrUrl: tx.qr_code_base64 ? `data:image/png;base64,${tx.qr_code_base64}` : urlQrCode(tx.qr_code || '')
+  };
+}
+
+/** Consulta o status atual do pagamento (usado no polling). */
+async function consultarStatusPagamento(paymentId) {
+  const { mercadoPago } = CONFIG;
+  if (mercadoPago.simulacao) return 'pending';
+
+  const base = mercadoPago.backendProxy
+    ? mercadoPago.backendProxy.replace(/\/$/, '') + '/' + paymentId
+    : `https://api.mercadopago.com/v1/payments/${paymentId}`;
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (!mercadoPago.backendProxy) {
+    headers['Authorization'] = `Bearer ${mercadoPago.accessToken}`;
+  }
+
+  try {
+    const r = await fetch(base, { headers });
+    const d = await r.json();
+    return d.status;                 // 'pending' | 'approved' | 'rejected' | ...
+  } catch (e) {
+    console.warn('[Mercado Pago] Falha ao consultar status:', e);
+    return 'pending';
+  }
+}
+
+/** Abre a tela do PIX e inicia a geração do QR Code. */
+async function abrirTelaPix(pedido) {
+  mostrarView('pix');
+
+  $('#pixValor').textContent = money(pedido.valores.total);
+  $('#pixQrContainer').innerHTML = `<div class="animate-pulse text-stone-400 text-sm">Gerando QR Code...</div>`;
+  $('#pixCopiaCola').value = '';
+  $('#pixStatus').innerHTML = `
+    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+    Aguardando confirmação do pagamento...`;
+
+  try {
+    const pix = await criarPagamentoPix(pedido);
+    estado.pix = { ...pix, pedidoId: pedido.id };
+
+    /* Renderiza o QR Code */
+    $('#pixQrContainer').innerHTML = `
+      <img src="${pix.qrUrl}" alt="QR Code PIX"
+           onerror="this.onerror=null;this.parentElement.innerHTML='<p class=&quot;text-xs text-red-600&quot;>Não foi possível carregar o QR Code.</p>'"
+           class="w-[240px] h-[240px] rounded-xl bg-white" />
+      ${pix.simulado ? '<p class="text-[10px] font-bold text-amber-600 mt-2">MODO SIMULAÇÃO</p>' : ''}
+    `;
+
+    $('#pixCopiaCola').value = pix.copiaECola || '(indisponível)';
+
+    /* Atualiza o pedido com o ID do pagamento */
+    pedido.pagamento.pixId = pix.paymentId;
+    salvarPedidos();
+
+    /* Inicia o polling do status (apenas no modo real) */
+    if (!pix.simulado) iniciarPollingPix(pedido);
+
+  } catch (erro) {
+    $('#pixQrContainer').innerHTML = `
+      <div class="text-center p-4">
+        <p class="text-3xl mb-2">⚠️</p>
+        <p class="text-xs text-red-600 font-bold">${esc(erro.message)}</p>
+        <p class="text-[11px] text-stone-500 mt-2">
+          Verifique o Access Token / o backend proxy nas configurações.
+        </p>
+      </div>`;
+    $('#pixStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Erro ao gerar o PIX`;
+  }
+}
+
+/** Faz polling do status do pagamento até ser aprovado. */
+let pollingTimer = null;
+function iniciarPollingPix(pedido) {
+  clearInterval(pollingTimer);
+  pollingTimer = setInterval(async () => {
+    if (!estado.pix) return;
+    const status = await consultarStatusPagamento(estado.pix.paymentId);
+    if (status === 'approved') {
+      clearInterval(pollingTimer);
+      confirmarPagamentoPix(true);
+    } else if (status === 'rejected' || status === 'cancelled') {
+      clearInterval(pollingTimer);
+      $('#pixStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> Pagamento não aprovado`;
+    }
+  }, CONFIG.mercadoPago.intervaloPolling);
+}
+
+/** Marca o PIX como pago e leva o cliente para a confirmação. */
+function confirmarPagamentoPix(pago = true) {
+  clearInterval(pollingTimer);
+
+  const pedido = estado.pedidos.find((p) => p.id === estado.pix?.pedidoId) || estado.pedidoAtual;
+  if (!pedido) return;
+
+  pedido.pagamento.status = pago ? 'pago' : 'pendente';
+  salvarPedidos();
+
+  mostrarConfirmacao(pedido);
+}
+
+
+/* ============================================================================
+ * 8) CONFIRMAÇÃO + WHATSAPP
+ * ========================================================================== */
+
+const ROTULOS_PAGAMENTO = {
+  pix: 'PIX',
+  cartao: 'Cartão na entrega (maquininha)',
+  dinheiro: 'Dinheiro'
+};
+
+/** Monta a mensagem de texto enviada ao WhatsApp do restaurante. */
+function montarMensagemWhatsApp(pedido) {
+  const { cliente, itens, valores, pagamento, numero } = pedido;
+
+  const linhasItens = itens.map((i) => {
+    const obs = i.obs ? `\n   ↳ _${i.obs}_` : '';
+    return `• ${i.qtd}x ${i.nome} — ${money(i.preco * i.qtd)}${obs}`;
+  }).join('\n');
+
+  const endereco = `${cliente.rua}, ${cliente.numero}` +
+    (cliente.complemento ? ` - ${cliente.complemento}` : '') +
+    `\nBairro: ${cliente.bairro}` +
+    (cliente.referencia ? `\nRef.: ${cliente.referencia}` : '');
+
+  let linhaPagamento = `💳 *Pagamento:* ${ROTULOS_PAGAMENTO[pagamento.tipo]}`;
+
+  if (pagamento.tipo === 'pix') {
+    linhaPagamento += pagamento.status === 'pago' ? ' — ✅ PAGO' : ' — ⏳ aguardando confirmação';
+  } else if (pagamento.tipo === 'dinheiro' && pagamento.trocoPara > 0) {
+    linhaPagamento += `\n💵 *Troco para:* ${money(pagamento.trocoPara)}`;
+  } else if (pagamento.tipo === 'cartao') {
+    linhaPagamento += '\n💳 Levar maquininha portátil';
+  }
+
+  return [
+    `*NOVO PEDIDO #${String(numero).padStart(3, '0')}*`,
+    `_${CONFIG.restaurante.nome}_`,
+    ``,
+    `👤 *Cliente:* ${cliente.nome}`,
+    `📱 *WhatsApp:* ${cliente.telefone}`,
+    `📍 *Endereço:* ${endereco}`,
+    ``,
+    `*ITENS DO PEDIDO*`,
+    linhasItens,
+    ``,
+    `Subtotal: ${money(valores.subtotal)}`,
+    `Taxa de entrega: ${money(valores.taxa)}`,
+    `*TOTAL: ${money(valores.total)}*`,
+    ``,
+    linhaPagamento,
+    ``,
+    `_Pedido gerado pelo cardápio digital._`
+  ].join('\n');
+}
+
+/** Monta o link wa.me e faz o redirect. */
+function linkWhatsApp(pedido) {
+  const mensagem = montarMensagemWhatsApp(pedido);
+  return `https://wa.me/${CONFIG.restaurante.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+}
+
+/** Renderiza a tela de confirmação. */
+function mostrarConfirmacao(pedido) {
+  estado.pedidoAtual = pedido;
+
+  $('#confNumero').textContent = '#' + String(pedido.numero).padStart(3, '0');
+
+  $('#confResumo').innerHTML = `
+    <div class="flex justify-between"><span class="text-stone-500">Cliente</span><span class="font-semibold">${esc(pedido.cliente.nome)}</span></div>
+    <div class="flex justify-between"><span class="text-stone-500">Entrega</span><span class="font-semibold text-right">${esc(pedido.cliente.rua)}, ${esc(pedido.cliente.numero)} — ${esc(pedido.cliente.bairro)}</span></div>
+    <div class="flex justify-between"><span class="text-stone-500">Itens</span><span class="font-semibold">${totalItensDe(pedido)} itens</span></div>
+    <div class="flex justify-between"><span class="text-stone-500">Pagamento</span><span class="font-semibold">${ROTULOS_PAGAMENTO[pedido.pagamento.tipo]}</span></div>
+    <div class="flex justify-between pt-2 border-t border-stone-200 mt-2">
+      <span class="font-black">Total</span>
+      <span class="font-black text-brand-600 text-lg">${money(pedido.valores.total)}</span>
+    </div>
+  `;
+
+  $('#btnWhatsApp').href = linkWhatsApp(pedido);
+
+  mostrarView('confirmacao');
+
+  /* Limpa o carrinho — o pedido já foi registrado */
+  estado.carrinho = [];
+  salvarCarrinho();
+  atualizarCarrinhoUI();
+}
+
+const totalItensDe = (pedido) => pedido.itens.reduce((s, i) => s + i.qtd, 0);
+
+
+/* ============================================================================
+ * 9) PAINEL DA COZINHA (ADMIN)
+ * ========================================================================== */
+
+/** Definição das etapas do preparo. */
+const ETAPAS = [
+  { id: 'novo',      titulo: 'Novo Pedido',      icone: '🔔', cor: 'bg-amber-100 text-amber-800 border-amber-200',    acao: 'Aceitar e preparar' },
+  { id: 'preparo',   titulo: 'Em Preparo',       icone: '👨‍🍳', cor: 'bg-sky-100 text-sky-800 border-sky-200',           acao: 'Saiu para entrega' },
+  { id: 'entrega',   titulo: 'Saiu para Entrega',icone: '🛵', cor: 'bg-violet-100 text-violet-800 border-violet-200', acao: 'Marcar como entregue' },
+  { id: 'concluido', titulo: 'Concluído',        icone: '✅', cor: 'bg-emerald-100 text-emerald-800 border-emerald-200', acao: null }
+];
+
+const indiceEtapa = (id) => Math.max(0, ETAPAS.findIndex((e) => e.id === id));
+
+/** Avança o pedido para a próxima etapa. */
+function avancarStatus(pedidoId) {
+  const pedido = estado.pedidos.find((p) => p.id === pedidoId);
+  if (!pedido) return;
+
+  const atual = indiceEtapa(pedido.status);
+  if (atual >= ETAPAS.length - 1) return;
+
+  pedido.status = ETAPAS[atual + 1].id;
+  pedido.atualizadoEm = new Date().toISOString();
+
+  salvarPedidos();
+  renderAdmin();
+  toast(`Pedido #${String(pedido.numero).padStart(3, '0')} → ${ETAPAS[atual + 1].titulo}`);
+}
+
+/** Volta o pedido para a etapa anterior (correção de engano). */
+function retrocederStatus(pedidoId) {
+  const pedido = estado.pedidos.find((p) => p.id === pedidoId);
+  if (!pedido) return;
+  const atual = indiceEtapa(pedido.status);
+  if (atual <= 0) return;
+
+  pedido.status = ETAPAS[atual - 1].id;
+  salvarPedidos();
+  renderAdmin();
+}
+
+/** Remove um pedido do painel. */
+function excluirPedido(pedidoId) {
+  if (!confirm('Remover este pedido definitivamente?')) return;
+  estado.pedidos = estado.pedidos.filter((p) => p.id !== pedidoId);
+  salvarPedidos();
+  renderAdmin();
+}
+
+/** Métricas rápidas do topo do painel. */
+function renderMetricas() {
+  const hoje = new Date().toDateString();
+  const pedidosHoje = estado.pedidos.filter((p) => new Date(p.criadoEm).toDateString() === hoje);
+  const faturamento = pedidosHoje.reduce((s, p) => s + p.valores.total, 0);
+  const emAndamento = estado.pedidos.filter((p) => p.status !== 'concluido').length;
+
+  const cartoes = [
+    { rotulo: 'Pedidos hoje',     valor: pedidosHoje.length,                  icone: '🧾', cor: 'text-stone-900' },
+    { rotulo: 'Faturamento hoje', valor: money(faturamento),                  icone: '💰', cor: 'text-emerald-600' },
+    { rotulo: 'Em andamento',     valor: emAndamento,                         icone: '🔥', cor: 'text-brand-600' },
+    { rotulo: 'Aguardando',       valor: estado.pedidos.filter((p) => p.status === 'novo').length, icone: '🔔', cor: 'text-amber-600' }
+  ];
+
+  $('#adminMetricas').innerHTML = cartoes.map((c) => `
+    <div class="bg-white rounded-2xl p-4 shadow-card">
+      <div class="text-xl mb-1">${c.icone}</div>
+      <p class="text-[11px] font-bold uppercase tracking-wide text-stone-400">${c.rotulo}</p>
+      <p class="text-xl font-black ${c.cor} mt-0.5">${c.valor}</p>
+    </div>
+  `).join('');
+}
+
+/** Renderiza um card de pedido no kanban. */
+function cardPedido(pedido) {
+  const etapaAtual = indiceEtapa(pedido.status);
+  const proxima = ETAPAS[etapaAtual + 1];
+  const etapa = ETAPAS[etapaAtual];
+
+  const itensResumo = pedido.itens.map((i) => `
+    <li class="flex justify-between gap-2">
+      <span class="truncate">
+        <strong>${i.qtd}x</strong> ${esc(i.nome)}
+        ${i.obs ? `<em class="block text-[10px] text-amber-700 not-italic">↳ ${esc(i.obs)}</em>` : ''}
+      </span>
+      <span class="whitespace-nowrap text-stone-500">${money(i.preco * i.qtd)}</span>
+    </li>`).join('');
+
+  const pagamentoInfo = pedido.pagamento.tipo === 'dinheiro' && pedido.pagamento.trocoPara > 0
+    ? `Dinheiro (troco p/ ${money(pedido.pagamento.trocoPara)})`
+    : ROTULOS_PAGAMENTO[pedido.pagamento.tipo] +
+      (pedido.pagamento.tipo === 'pix' ? (pedido.pagamento.status === 'pago' ? ' ✅' : ' ⏳') : '');
+
+  return `
+    <article class="bg-white rounded-2xl shadow-card border border-stone-200 overflow-hidden flex flex-col shrink-0 w-full">
+
+      <div class="px-4 py-3 border-b border-stone-100 flex items-center justify-between gap-2 ${etapa.cor} border-b">
+        <span class="font-black text-sm">#${String(pedido.numero).padStart(3, '0')}</span>
+        <span class="text-[11px] font-bold opacity-80">${hora(pedido.criadoEm)}</span>
+      </div>
+
+      <div class="p-4 flex-1">
+        <p class="font-extrabold text-sm leading-tight">${esc(pedido.cliente.nome)}</p>
+        <p class="text-[11px] text-stone-500 mt-0.5">📱 ${esc(pedido.cliente.telefone)}</p>
+        <p class="text-[11px] text-stone-500 mt-1 leading-snug">
+          📍 ${esc(pedido.cliente.rua)}, ${esc(pedido.cliente.numero)} — ${esc(pedido.cliente.bairro)}
+          ${pedido.cliente.referencia ? `<br><span class="text-stone-400">Ref.: ${esc(pedido.cliente.referencia)}</span>` : ''}
+        </p>
+
+        <ul class="mt-3 pt-3 border-t border-dashed border-stone-200 text-[12px] space-y-1.5">
+          ${itensResumo}
+        </ul>
+
+        <div class="mt-3 pt-3 border-t border-dashed border-stone-200 text-[12px] space-y-1">
+          <div class="flex justify-between text-stone-500"><span>Subtotal</span><span>${money(pedido.valores.subtotal)}</span></div>
+          <div class="flex justify-between text-stone-500"><span>Entrega</span><span>${money(pedido.valores.taxa)}</span></div>
+          <div class="flex justify-between font-black text-sm pt-1.5 border-t border-stone-200 mt-1.5">
+            <span>Total</span><span class="text-brand-600">${money(pedido.valores.total)}</span>
+          </div>
+        </div>
+
+        <p class="mt-3 text-[11px] font-bold text-stone-600 bg-stone-50 rounded-lg px-2.5 py-2">
+          💳 ${pagamentoInfo}
+        </p>
+      </div>
+
+      <div class="p-3 pt-0 flex gap-2">
+        ${proxima ? `
+          <button data-avancar="${pedido.id}"
+            class="flex-1 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-extrabold transition active:scale-95">
+            ${proxima.icone} ${ETAPAS[etapaAtual].acao}
+          </button>` : `
+          <span class="flex-1 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center">
+            ✅ Entregue
+          </span>`}
+
+        ${etapaAtual > 0 ? `
+          <button data-retroceder="${pedido.id}" title="Voltar etapa"
+            class="w-10 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-500 text-sm font-bold transition">↩</button>` : ''}
+
+        <button data-excluir="${pedido.id}" title="Excluir pedido"
+          class="w-10 rounded-xl bg-stone-100 hover:bg-red-50 hover:text-red-600 text-stone-400 text-sm transition">🗑</button>
+      </div>
+    </article>
+  `;
+}
+
+/** Renderiza o kanban completo. */
+function renderAdmin() {
+  if (!estado.adminLogado) {
+    $('#adminLogin').classList.remove('oculto');
+    $('#adminPainel').classList.add('oculto');
+    return;
+  }
+
+  $('#adminLogin').classList.add('oculto');
+  $('#adminPainel').classList.remove('oculto');
+
+  renderMetricas();
+
+  /* Ordena do mais recente para o mais antigo */
+  const ordenados = [...estado.pedidos].sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+
+  $('#kanban').innerHTML = ETAPAS.map((etapa) => {
+    const lista = ordenados.filter((p) => p.status === etapa.id);
+    return `
+      <div class="flex flex-col min-w-0">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <h3 class="font-black text-sm flex items-center gap-1.5">
+            <span>${etapa.icone}</span> ${etapa.titulo}
+          </h3>
+          <span class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-white shadow-card text-stone-500">${lista.length}</span>
+        </div>
+        <div class="space-y-3 min-h-[120px]">
+          ${lista.length
+            ? lista.map(cardPedido).join('')
+            : `<div class="rounded-2xl border-2 border-dashed border-stone-200 grid place-items-center py-8 text-stone-300 text-xs font-bold">Vazio</div>`}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/** Efetua o login no painel. */
+function entrarAdmin() {
+  const senha = $('#adminSenha').value;
+  if (senha === CONFIG.admin.senha) {
+    estado.adminLogado = true;
+    sessionStorage.setItem(CHAVES.sessao, '1');
+    $('#adminErro').classList.add('oculto');
+    $('#adminSenha').value = '';
+    mostrarView('admin');
+    renderAdmin();
+  } else {
+    $('#adminErro').classList.remove('oculto');
+    $('#adminSenha').value = '';
+    $('#adminSenha').focus();
+  }
+}
+
+
+/* ============================================================================
+ * 10) 🆕 HISTÓRICO DE PEDIDOS POR TELEFONE
+ * ========================================================================== */
+
+/** Renderiza um card individual de pedido no histórico do cliente. */
+function cardHistorico(pedido) {
+  const etapaAtual = indiceEtapa(pedido.status);
+  const etapa = ETAPAS[etapaAtual];
+
+  /* Rótulo de pagamento enriquecido com status do PIX */
+  let pagamentoLabel = ROTULOS_PAGAMENTO[pedido.pagamento.tipo] || '—';
+  if (pedido.pagamento.tipo === 'pix') {
+    pagamentoLabel += pedido.pagamento.status === 'pago' ? ' · ✅ Pago' : ' · ⏳ Pendente';
+  } else if (pedido.pagamento.tipo === 'dinheiro' && pedido.pagamento.trocoPara > 0) {
+    pagamentoLabel += ` · troco p/ ${money(pedido.pagamento.trocoPara)}`;
+  }
+
+  const itens = pedido.itens.map((i) => `
+    <li class="flex justify-between gap-2 py-0.5">
+      <span class="truncate">
+        <strong class="text-ink">${i.qtd}x</strong> ${esc(i.nome)}
+        ${i.obs ? `<em class="block text-[10px] text-amber-700 not-italic">↳ ${esc(i.obs)}</em>` : ''}
+      </span>
+      <span class="whitespace-nowrap text-stone-500">${money(i.preco * i.qtd)}</span>
+    </li>
+  `).join('');
+
+  return `
+    <article class="bg-white rounded-2xl shadow-card border border-stone-200 overflow-hidden mb-3 anim-fade">
+
+      <!-- Cabeçalho: número + status -->
+      <div class="px-5 py-3.5 flex items-center justify-between gap-3 border-b border-stone-100">
+        <div class="min-w-0">
+          <p class="font-black text-base leading-none">
+            Pedido <span class="text-brand-600">#${String(pedido.numero).padStart(3, '0')}</span>
+          </p>
+          <p class="text-[11px] text-stone-500 mt-1">🕒 ${dataHoraCompleta(pedido.criadoEm)}</p>
+        </div>
+        <span class="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1.5 rounded-full border ${etapa.cor}">
+          ${etapa.icone} ${etapa.titulo}
+        </span>
+      </div>
+
+      <!-- Itens -->
+      <div class="px-5 py-3">
+        <p class="text-[10px] font-bold uppercase tracking-wide text-stone-400 mb-1.5">Itens</p>
+        <ul class="text-[12.5px] space-y-1">
+          ${itens}
+        </ul>
+      </div>
+
+      <!-- Rodapé: subtotal, taxa, total, pagamento -->
+      <div class="px-5 py-3.5 bg-stone-50 border-t border-stone-100 text-[12px]">
+        <div class="flex justify-between text-stone-500"><span>Subtotal</span><span>${money(pedido.valores.subtotal)}</span></div>
+        <div class="flex justify-between text-stone-500 mt-0.5"><span>Taxa de entrega (${esc(pedido.cliente.bairro)})</span><span>${money(pedido.valores.taxa)}</span></div>
+        <div class="flex justify-between font-black text-sm pt-2 border-t border-stone-200 mt-2">
+          <span>Total</span>
+          <span class="text-brand-600 text-base">${money(pedido.valores.total)}</span>
+        </div>
+        <p class="mt-2.5 text-[11px] font-bold text-stone-600 bg-white border border-stone-200 rounded-lg px-2.5 py-2">
+          💳 ${pagamentoLabel}
+        </p>
+      </div>
+    </article>
+  `;
+}
+
+/**
+ * Filtra os pedidos no localStorage pelo número de telefone digitado
+ * e renderiza o resultado na tela de histórico.
+ */
+function buscarPedidosPorTelefone() {
+  const input = $('#historicoTelefone');
+  const digitos = input.value.replace(/\D/g, '');
+  const container = $('#historicoResultado');
+
+  /* Validação básica */
+  if (digitos.length < 10) {
+    toast('⚠️ Digite o número completo do WhatsApp');
+    input.focus();
+    input.classList.add('ring-2', 'ring-red-400');
+    setTimeout(() => input.classList.remove('ring-2', 'ring-red-400'), 2000);
+    return;
+  }
+
+  estado.historicoTelefone = digitos;
+
+  /* Filtra por inclusão (tolera formatos com máscara diferentes) */
+  const encontrados = estado.pedidos
+    .filter((p) => (p.cliente?.telefone || '').replace(/\D/g, '').includes(digitos))
+    .sort((a, b) => new Date(b.criadoEm) - new Date(a.criadoEm));
+
+  /* Nenhum resultado */
+  if (encontrados.length === 0) {
+    container.innerHTML = `
+      <div class="rounded-2xl border-2 border-dashed border-stone-200 bg-white/60 p-10 text-center">
+        <div class="text-5xl mb-3">😕</div>
+        <p class="font-bold text-stone-600">Nenhum pedido encontrado</p>
+        <p class="text-xs text-stone-400 mt-1 max-w-xs mx-auto">
+          Não localizamos pedidos para o número <strong>${esc(mascaraTelefone(digitos))}</strong>.
+          Confira se digitou o mesmo número usado no checkout.
+        </p>
+      </div>`;
+    return;
+  }
+
+  /* Soma dos pedidos encontrados (útil pro cliente) */
+  const totalGasto = encontrados.reduce((s, p) => s + (p.valores?.total || 0), 0);
+
+  container.innerHTML = `
+    <div class="flex items-center justify-between mb-3 px-1">
+      <p class="text-xs font-bold text-stone-500">
+        <span class="text-brand-600">${encontrados.length}</span> pedido(s) para ${esc(mascaraTelefone(digitos))}
+      </p>
+      <p class="text-xs font-bold text-stone-400">
+        Total gasto: <span class="text-emerald-600">${money(totalGasto)}</span>
+      </p>
+    </div>
+    ${encontrados.map(cardHistorico).join('')}
+  `;
+
+  toast(`📦 ${encontrados.length} pedido(s) encontrado(s)`);
+}
+
+/** Abre a view de histórico, limpando o resultado anterior. */
+function abrirHistorico() {
+  mostrarView('historico');
+
+  /* Pré-preenche com o telefone usado no último checkout, se houver */
+  const input = $('#historicoTelefone');
+  if (!input.value && estado.pedidos.length > 0) {
+    const ultimo = estado.pedidos[estado.pedidos.length - 1];
+    if (ultimo?.cliente?.telefone) {
+      input.value = ultimo.cliente.telefone;
+    }
+  }
+
+  /* Foco automático no campo (garante UX boa no mobile) */
+  setTimeout(() => input?.focus(), 120);
+}
+
+
+/* ============================================================================
+ * 11) EVENTOS E BOOTSTRAP
+ * ========================================================================== */
+
+/* ---------- 11.1 Delegação: cardápio ---------- */
+document.addEventListener('click', (ev) => {
+  const alvo = ev.target.closest('[data-produto], [data-adicionar], [data-categoria]');
+  if (!alvo) return;
+
+  /* Chip de categoria */
+  if (alvo.dataset.categoria) {
+    estado.categoriaAtiva = alvo.dataset.categoria;
+    renderCategorias();
+    renderProdutos();
+    return;
+  }
+
+  /* Botão "+" dentro do card */
+  if (alvo.dataset.adicionar) {
+    ev.stopPropagation();
+    abrirModalProduto(alvo.dataset.adicionar);
+    return;
+  }
+
+  /* Clique no card do produto */
+  if (alvo.dataset.produto) {
+    abrirModalProduto(alvo.dataset.produto);
+  }
+});
+
+/* ---------- 11.2 Delegação: carrinho ---------- */
+document.addEventListener('click', (ev) => {
+  const btnQtd = ev.target.closest('[data-qtd][data-linha]');
+  if (btnQtd) {
+    alterarQtd(btnQtd.dataset.linha, Number(btnQtd.dataset.qtd));
+    return;
+  }
+
+  const btnRemover = ev.target.closest('[data-remover]');
+  if (btnRemover) {
+    removerItem(btnRemover.dataset.remover);
+    return;
+  }
+});
+
+/* ---------- 11.3 Delegação: modal de produto ---------- */
+$('#conteudoModalProduto').addEventListener('click', (ev) => {
+  if (ev.target.closest('[data-fechar-produto]')) {
+    fecharModalProduto();
+    return;
+  }
+
+  const btnQtd = ev.target.closest('[data-qtd]');
+  if (btnQtd && estado.produtoModal) {
+    estado.produtoModal.qtd = Math.max(1, estado.produtoModal.qtd + Number(btnQtd.dataset.qtd));
+    atualizarPrecoModal();
+    return;
+  }
+
+  if (ev.target.closest('#btnAddModal') && estado.produtoModal) {
+    const { produtoId, qtd } = estado.produtoModal;
+    const obs = $('#obsProduto')?.value || '';
+    fecharModalProduto();
+    adicionarAoCarrinho(produtoId, qtd, obs);
+  }
+});
+
+/* ---------- 11.4 Delegação: kanban ---------- */
+$('#kanban').addEventListener('click', (ev) => {
+  const avancar = ev.target.closest('[data-avancar]');
+  if (avancar) { avancarStatus(avancar.dataset.avancar); return; }
+
+  const retroceder = ev.target.closest('[data-retroceder]');
+  if (retroceder) { retrocederStatus(retroceder.dataset.retroceder); return; }
+
+  const excluir = ev.target.closest('[data-excluir]');
+  if (excluir) { excluirPedido(excluir.dataset.excluir); }
+});
+
+/* ---------- 11.5 Botões de voltar ---------- */
+document.addEventListener('click', (ev) => {
+  const voltar = ev.target.closest('[data-voltar]');
+  if (!voltar) return;
+
+  clearInterval(pollingTimer);
+  const destino = voltar.dataset.voltar;
+  mostrarView(destino);
+
+  if (destino === 'checkout') renderResumoCheckout();
+  if (destino === 'cliente') atualizarCarrinhoUI();
+});
+
+/* ---------- 11.6 Bindings gerais ---------- */
+function ligarEventos() {
+
+  /* Busca */
+  $('#inputBusca').addEventListener('input', (e) => {
+    estado.busca = e.target.value;
+    renderProdutos();
+  });
+
+  /* Carrinho */
+  $('#btnCarrinhoTopo').addEventListener('click', abrirCarrinho);
+  $('#btnAbrirCarrinhoBarra').addEventListener('click', abrirCarrinho);
+  $('#btnFecharCarrinho').addEventListener('click', fecharCarrinho);
+  $('#overlayCarrinho').addEventListener('click', fecharCarrinho);
+  $('#btnIrCheckout').addEventListener('click', irParaCheckout);
+
+  /* Modal de produto — fechar ao clicar no overlay */
+  $('#overlayProduto').addEventListener('click', fecharModalProduto);
+
+  /* 🆕 NOVO — Histórico: botão do header */
+  $('#btnMeusPedidos').addEventListener('click', abrirHistorico);
+
+  /* 🆕 NOVO — Histórico: botão do hero (mobile) */
+  $('#btnMeusPedidosHero').addEventListener('click', abrirHistorico);
+
+  /* 🆕 NOVO — Histórico: máscara no input de telefone */
+  $('#historicoTelefone').addEventListener('input', (e) => {
+    e.target.value = mascaraTelefone(e.target.value);
+  });
+
+  /* 🆕 NOVO — Histórico: botão buscar */
+  $('#btnBuscarHistorico').addEventListener('click', buscarPedidosPorTelefone);
+
+  /* 🆕 NOVO — Histórico: Enter no input dispara a busca */
+  $('#historicoTelefone').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') buscarPedidosPorTelefone();
+  });
+
+  /* Máscara de telefone (checkout) */
+  $('#cliTelefone').addEventListener('input', (e) => {
+    e.target.value = mascaraTelefone(e.target.value);
+  });
+
+  /* Bairro altera a taxa em tempo real */
+  $('#cliBairro').addEventListener('change', () => {
+    atualizarCarrinhoUI();
+    renderResumoCheckout();
+  });
+
+  /* Forma de pagamento */
+  $$('input[name="pagamento"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      const valor = document.querySelector('input[name="pagamento"]:checked').value;
+      $('#blocoTroco').classList.toggle('oculto', valor !== 'dinheiro');
+      $('#blocoCartao').classList.toggle('oculto', valor !== 'cartao');
+      renderResumoCheckout();
+    });
+  });
+
+  /* Finalizar pedido */
+  $('#btnFinalizar').addEventListener('click', async () => {
+    if (!validarCheckout()) return;
+
+    const pedido = montarPedido();
+
+    /* Avisa se a loja estiver fechada */
+    if (!CONFIG.restaurante.aberto) {
+      toast('😴 A loja está fechada. Pedido registrado como agendamento.');
+    }
+
+    /* Registra o pedido no localStorage (aparece no painel da cozinha) */
+    estado.pedidos.push(pedido);
+    estado.sequencia += 1;
+    salvarPedidos();
+    estado.pedidoAtual = pedido;
+
+    /* Fluxo por forma de pagamento */
+    if (pedido.pagamento.tipo === 'pix') {
+      await abrirTelaPix(pedido);
+    } else {
+      mostrarConfirmacao(pedido);
+    }
+
+    /* Re-renderiza o painel caso o admin esteja aberto em outra aba */
+    renderAdmin();
+  });
+
+  /* PIX — copiar código */
+  $('#btnCopiarPix').addEventListener('click', async () => {
+    const campo = $('#pixCopiaCola');
+    if (!campo.value) return;
+    try {
+      await navigator.clipboard.writeText(campo.value);
+      toast('📋 Código PIX copiado!');
+    } catch {
+      campo.select();
+      document.execCommand('copy');
+      toast('📋 Código PIX copiado!');
+    }
+  });
+
+  /* PIX — confirmar manualmente (modo simulação) */
+  $('#btnSimularPagamento').addEventListener('click', () => {
+    if (CONFIG.mercadoPago.simulacao) {
+      confirmarPagamentoPix(true);
+    } else {
+      toast('⏳ Assim que o banco confirmar, o pedido avança automaticamente');
+    }
+  });
+
+  /* Confirmação — novo pedido */
+  $('#btnNovoPedido').addEventListener('click', () => {
+    mostrarView('cliente');
+    atualizarCarrinhoUI();
+  });
+
+  /* ADMIN — acessar */
+  $('#btnAdmin').addEventListener('click', () => {
+    mostrarView('admin');
+    renderAdmin();
+  });
+  $('#btnVerCardapio').addEventListener('click', () => {
+    mostrarView('cliente');
+    atualizarCarrinhoUI();
+  });
+  $('#btnEntrarAdmin').addEventListener('click', entrarAdmin);
+  $('#adminSenha').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') entrarAdmin();
+  });
+  $('#btnSairAdmin').addEventListener('click', () => {
+    estado.adminLogado = false;
+    sessionStorage.removeItem(CHAVES.sessao);
+    mostrarView('cliente');
+  });
+
+  /* ADMIN — abrir/fechar loja */
+  $('#toggleLoja').addEventListener('change', (e) => {
+    CONFIG.restaurante.aberto = e.target.checked;
+    localStorage.setItem('sabordatia:loja', String(e.target.checked));
+    atualizarHeader();
+    toast(e.target.checked ? '✅ Loja aberta' : '😴 Loja fechada');
+  });
+
+  /* ADMIN — limpar concluídos */
+  $('#btnLimparConcluidos').addEventListener('click', () => {
+    const antes = estado.pedidos.length;
+    estado.pedidos = estado.pedidos.filter((p) => p.status !== 'concluido');
+    salvarPedidos();
+    renderAdmin();
+    toast(`${antes - estado.pedidos.length} pedido(s) removido(s)`);
+  });
+
+  /* Fecha modais com ESC */
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!$('#modalProduto').classList.contains('oculto')) fecharModalProduto();
+    else if (!$('#drawerCarrinho').classList.contains('oculto')) fecharCarrinho();
+  });
+
+  /* Sincroniza entre abas (cliente ↔ cozinha) */
+  window.addEventListener('storage', (e) => {
+    if (e.key === CHAVES.pedidos || e.key === CHAVES.seq) {
+      try { estado.pedidos = JSON.parse(localStorage.getItem(CHAVES.pedidos) || '[]'); } catch {}
+      if (!$('#view-admin').classList.contains('oculto')) renderAdmin();
+      /* 🆕 Se o usuário estiver na tela de histórico e já tiver buscado,
+         re-renderiza o resultado para manter a lista atualizada. */
+      if (!$('#view-historico').classList.contains('oculto') && estado.historicoTelefone) {
+        const v = $('#historicoTelefone').value;
+        if (v.replace(/\D/g, '').length >= 10) buscarPedidosPorTelefone();
+      }
+    }
+    if (e.key === 'sabordatia:loja') {
+      CONFIG.restaurante.aberto = localStorage.getItem('sabordatia:loja') === 'true';
+      atualizarHeader();
+    }
+  });
+}
+
+/* ---------- 11.7 Cabeçalho dinâmico ---------- */
+function atualizarHeader() {
+  const aberto = CONFIG.restaurante.aberto;
+  const status = $('#headerStatus');
+
+  status.className = `text-[11px] font-semibold flex items-center gap-1.5 mt-0.5 ${
+    aberto ? 'text-emerald-600' : 'text-red-500'
+  }`;
+  status.innerHTML = `
+    <span class="w-1.5 h-1.5 rounded-full ${aberto ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}"></span>
+    <span>${aberto ? 'Aberto agora' : 'Fechado no momento'}</span>`;
+
+  const naAdmin     = !$('#view-admin').classList.contains('oculto');
+  const noHistorico = !$('#view-historico').classList.contains('oculto');
+
+  $('#btnAdminTexto').textContent = naAdmin ? 'Cardápio' : 'Cozinha';
+
+  /* 🆕 Esconde botão "Meus Pedidos" e carrinho durante o modo admin */
+  $('#btnCarrinhoTopo').classList.toggle('oculto', naAdmin);
+  $('#btnMeusPedidos').classList.toggle('oculto', naAdmin);
+
+  /* Barra flutuante de carrinho: esconde no admin e no histórico */
+  $('#barraCarrinho').classList.toggle('oculto', naAdmin || noHistorico || totalItens() === 0);
+}
+
+/* ---------- 11.8 Inicialização ---------- */
+function iniciar() {
+  carregarEstado();
+
+  /* Aplica configurações visuais */
+  document.title = `${CONFIG.restaurante.nome} · Cardápio Digital`;
+  $('#headerNome').textContent = CONFIG.restaurante.nome;
+
+  /* Restaura sessão do admin */
+  estado.adminLogado = sessionStorage.getItem(CHAVES.sessao) === '1';
+  $('#toggleLoja').checked = CONFIG.restaurante.aberto;
+
+  /* Renderiza tudo */
+  renderCategorias();
+  renderProdutos();
+  renderBairros();
+  atualizarCarrinhoUI();
+  atualizarHeader();
+  ligarEventos();
+
+  if (estado.adminLogado) renderAdmin();
+
+  console.log('%c🍲 Sabor da Tia — Cardápio Digital pronto!', 'color:#ea580c;font-weight:bold;font-size:14px');
+  console.log('Painel da cozinha: clique em "Cozinha" (senha padrão: ' + CONFIG.admin.senha + ')');
+  console.log('📦 Histórico de pedidos: clique em "Meus Pedidos" ou informe seu WhatsApp.');
+}
+
+document.addEventListener('DOMContentLoaded', iniciar);
+</script>
+</body>
+</html>
